@@ -625,47 +625,38 @@ function makeDraggable(el, handle) {
   document.addEventListener("mouseup", () => { dragging = false; });
 }
 
-// ── 切換檔案 ──────────────────────────────────────────────
-document.getElementById("btnSwitchFile").addEventListener("click", () => {
-  document.getElementById("fileInput").click();
-});
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      pets = data;
-      renderPetList("");
-      toast(`已切換資料檔，共 ${pets.length} 筆寵物`);
-    } catch (err) {
-      toast("讀取檔案失敗：" + err.message);
-    }
-  };
-  reader.readAsText(file, "utf-8");
-});
-
 // ── 更新寵物資料（跨域抓取） ──────────────────────────────────
 const PET_LIST_URL = "https://cg-originmood-dc.github.io/%E5%AF%B5%E7%89%A9%E6%B8%85%E5%96%AE/";
 const NEWS_LIST_URL = "https://cg.originmood.com/news.html";
+// 自建的 Cloudflare Worker 代理（選填，見 cloudflare-worker-proxy.js 與 README.md）。
+// 有填的話會第一個優先嘗試，比依賴別人的免費公開代理穩定很多。
+const OWN_WORKER_PROXY_URL = "https://cross-gate.eyasutw.workers.dev"; // 例如: "https://mowuz-proxy.your-name.workers.dev"
+
 const CORS_PROXIES = [
+  ...(OWN_WORKER_PROXY_URL ? [(u) => `${OWN_WORKER_PROXY_URL}/?url=${encodeURIComponent(u)}`] : []),
   (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
   (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  (u) => `https://proxy.cors.sh/${u}`,
+  (u) => `https://thingproxy.freeboard.io/fetch/${u}`,
 ];
 
 async function fetchViaProxy(url) {
-  let lastErr;
+  const errors = [];
   for (const makeUrl of CORS_PROXIES) {
+    const proxyUrl = makeUrl(url);
     try {
-      const resp = await fetch(makeUrl(url));
+      const resp = await fetch(proxyUrl);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      return await resp.text();
+      const text = await resp.text();
+      if (!text || text.trim().length < 20) throw new Error("回應內容是空的");
+      return text;
     } catch (err) {
-      lastErr = err;
+      errors.push(`${proxyUrl} → ${err.message}`);
     }
   }
-  throw lastErr || new Error("所有跨域代理都失敗了");
+  // 免費的公開代理服務常常會失效、被限流、或需要另外申請 key，這裡把每一個嘗試過的
+  // 代理和對應的錯誤都列出來，方便直接看出目前是「全部都失效了」還是特定一個有問題。
+  throw new Error("所有跨域代理都失敗了，明細：\n" + errors.join("\n"));
 }
 
 function toNum(s) {
@@ -782,7 +773,7 @@ document.getElementById("btnUpdate").addEventListener("click", async () => {
     : "";
   const ok = await confirmDialog(
     "即將從寵物清單網站抓取最新資料，並額外檢查官網「最新資訊」公告頁裡\n" +
-    "近期公告出現的新寵物資料，然後覆蓋目前的寵物資料（可用「切換檔案」還原舊檔）。\n\n" +
+    "近期公告出現的新寵物資料，然後覆蓋目前的寵物資料。\n\n" +
     "注意：網頁版需要透過公開的跨域代理服務才能抓取，若代理服務當下不穩定可能會失敗，\n可以稍後再試一次。" +
     shareNote + "\n\n確定要更新嗎？");
   if (!ok) return;
