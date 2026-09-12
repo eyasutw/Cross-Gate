@@ -20,6 +20,7 @@
 | `pet_data.json` | 同一份資料的 JSON 格式，給「切換檔案」功能用，也方便你自己編輯資料 |
 | `app.js` | 介面邏輯（搜尋、算檔、模擬成長、更新資料） |
 | `supabase-config.js` | Supabase 連線設定（選填，見下方「Supabase 設定步驟」） |
+| `cloudflare-worker-proxy.js` | Cloudflare Worker 代理程式碼（選填，見下方「自建 Cloudflare Worker 代理」，要部署到 Cloudflare 上，不用上傳到 GitHub Pages 也可以） |
 
 ## 怎麼發布到 GitHub Pages
 
@@ -32,15 +33,65 @@
    `https://你的帳號.github.io/mowuz-web/`
 6. 打開這個網址就是能用的網頁版，之後把這個網址分享給別人即可
 
+## 自建 Cloudflare Worker 代理（取代免費公開代理，更穩定）
+
+免費公開的 CORS 代理（corsproxy.io 這類）常常會失效、被限流、或哪天開始要求申請帳號。
+自己架一個 Cloudflare Worker 當代理，完全自己掌控、免費額度很高（每天 10 萬次請求），
+不會再被別人的服務狀況影響。
+
+### 1. 建立 Cloudflare 帳號並建立 Worker
+
+1. 到 https://dash.cloudflare.com 註冊帳號（免費）
+2. 左側選單找到 **Workers 及 Pages**，點「建立應用程式」→「建立 Worker」
+3. 幫 Worker 取個名字（例如 `mowuz-proxy`），建立完成
+
+### 2. 貼上程式碼
+
+1. 點「編輯程式碼」，會打開一個線上編輯器
+2. 把整個 `cloudflare-worker-proxy.js` 的內容複製貼上去（覆蓋預設範例程式碼）
+3. 點右上角「部署」
+
+### 3. 取得 Worker 網址
+
+部署完成後，會看到一個網址，長得像：
+
+```
+https://mowuz-proxy.你的帳號.workers.dev
+```
+
+### 4. 填進網頁版設定
+
+打開 `app.js`，找到這一行（在檔案偏上方位置）：
+
+```js
+const OWN_WORKER_PROXY_URL = "";
+```
+
+把剛剛的 Worker 網址填進去（**結尾不要加斜線 `/`**）：
+
+```js
+const OWN_WORKER_PROXY_URL = "https://mowuz-proxy.你的帳號.workers.dev";
+```
+
+存檔後重新上傳 `app.js` 到 GitHub 覆蓋掉舊的。
+
+### 之後的運作方式
+
+- 「更新寵物資料」會**優先使用你自己的 Worker**，失敗才會依序退回使用那些免費公開代理當備援
+- 這個 Worker 有做網域白名單限制，只能拿來抓取本專案需要的兩個網站，不會被別人拿去當任意用途的代理濫用
+- Cloudflare Workers 免費額度是每天 10 萬次請求，一般使用完全用不完，不會有額外費用
+
 ## 「更新寵物資料」按鈕的重要限制（老實說）
 
 網頁版沒辦法像 Python 版一樣直接用 `requests` 抓資料——瀏覽器的**跨域安全限制（CORS）**
-會擋掉直接對其他網站發出的請求。我在程式碼裡用了公開的跨域代理服務
-（corsproxy.io、allorigins.win）繞過這個限制，兩個都試過還是失敗的話，
-就會跳出錯誤訊息，不會讓程式當掉。
+會擋掉直接對其他網站發出的請求。我在程式碼裡用了 4 個公開的跨域代理服務接力嘗試
+（corsproxy.io、allorigins.win、proxy.cors.sh、thingproxy.freeboard.io），
+依序試過去，其中一個能用就會成功；4 個都失敗才會跳出錯誤訊息，不會讓程式當掉，
+而且錯誤訊息會列出每一個代理各自失敗的原因，方便判斷問題。
 
-這些代理服務都是**免費公開的第三方服務**，不是我們自己架的，有時候可能會不穩定、
-被限流、或哪天服務直接關掉不能用了。如果「更新寵物資料」持續失敗，可以：
+這些代理服務都是**免費公開的第三方服務**，不是我們自己架的，會不定期改規則、
+限流、甚至關站（例如 corsproxy.io 目前已經開始要求申請帳號/API key，
+免費匿名呼叫可能會收到 401）。如果「更新寵物資料」持續 4 個都失敗，可以：
 
 - 過一段時間再試一次（代理服務可能只是暫時不穩）
 - 或者，繼續用 Python 桌面版來更新（它不受瀏覽器 CORS 限制），

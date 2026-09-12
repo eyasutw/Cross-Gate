@@ -491,8 +491,10 @@ function openSimWindow(state) {
   const container = document.getElementById("simWindows");
   const el = document.createElement("div");
   el.className = "sim-window";
-  const x = 20 + (windowOffset % 8) * 28, y = 20 + (windowOffset % 8) * 28;
-  el.style.left = x + "px"; el.style.top = y + "px";
+  // 直接停靠在畫面右側，往下依序錯開，避免疊在版面中間蓋住寵物清單
+  el.style.right = "16px";
+  el.style.top = (16 + (windowOffset % 8) * 28) + "px";
+  el.style.left = "auto";
 
   el.innerHTML = `
     <div class="titlebar">
@@ -542,10 +544,10 @@ function openSimWindow(state) {
       const minusDisabled = state.alloc[i] <= 0;
       const plusDisabled = remain <= 0 || wouldBurst(state, i, 1);
       html += `
-        <button class="pm minus" data-i="${i}" ${minusDisabled ? "disabled" : ""}>－</button>
+        <button class="pm minus" data-i="${i}" ${minusDisabled ? "disabled" : ""}>-</button>
         <span>${TIER_LABELS[i]}</span>
         <span class="val">${val}</span>
-        <button class="pm plus" data-i="${i}" ${plusDisabled ? "disabled" : ""}>＋</button>
+        <button class="pm plus" data-i="${i}" ${plusDisabled ? "disabled" : ""}>+</button>
         <span>${COMBAT_LABELS[combatKey]}</span>
         <span class="val">${combatVal}</span>
         <input type="number" class="alloc-input" data-i="${i}" value="${state.alloc[i]}">`;
@@ -614,6 +616,8 @@ function makeDraggable(el, handle) {
   handle.addEventListener("mousedown", (e) => {
     dragging = true; sx = e.clientX; sy = e.clientY;
     ox = el.offsetLeft; oy = el.offsetTop;
+    el.style.right = "auto";  // 開始拖曳後改用 left 定位，避免跟原本的 right 定位互相打架
+    el.style.left = ox + "px";
     el.style.zIndex = String(++makeDraggable._z || 20);
     e.preventDefault();
   });
@@ -630,7 +634,7 @@ const PET_LIST_URL = "https://cg-originmood-dc.github.io/%E5%AF%B5%E7%89%A9%E6%B
 const NEWS_LIST_URL = "https://cg.originmood.com/news.html";
 // 自建的 Cloudflare Worker 代理（選填，見 cloudflare-worker-proxy.js 與 README.md）。
 // 有填的話會第一個優先嘗試，比依賴別人的免費公開代理穩定很多。
-const OWN_WORKER_PROXY_URL = "https://cross-gate.eyasutw.workers.dev"; // 例如: "https://mowuz-proxy.your-name.workers.dev"
+const OWN_WORKER_PROXY_URL = ""; // 例如: "https://mowuz-proxy.your-name.workers.dev"
 
 const CORS_PROXIES = [
   ...(OWN_WORKER_PROXY_URL ? [(u) => `${OWN_WORKER_PROXY_URL}/?url=${encodeURIComponent(u)}`] : []),
