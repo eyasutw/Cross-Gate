@@ -1,7 +1,7 @@
 // app.js — 初心寵物算檔模擬 網頁版主邏輯
 
 const AXIS_NAMES = ["體力", "力量", "防禦", "敏捷", "魔法"];
-const TIER_LABELS = ["體力", "力量", "強度", "速度", "魔法圈"];
+const TIER_LABELS = ["體力", "力量", "強度", "速度", "魔法"];
 const COMBAT_LABELS = { attack: "攻擊", defend: "防禦", agi: "敏捷", wis: "精神", res: "回復" };
 
 let pets = PET_DATA.slice();
@@ -544,12 +544,12 @@ function openSimWindow(state) {
       const minusDisabled = state.alloc[i] <= 0;
       const plusDisabled = remain <= 0 || wouldBurst(state, i, 1);
       html += `
-        <button class="pm minus" data-i="${i}" ${minusDisabled ? "disabled" : ""}>-</button>
         <span>${TIER_LABELS[i]}</span>
         <span class="val">${val}</span>
         <button class="pm plus" data-i="${i}" ${plusDisabled ? "disabled" : ""}>+</button>
         <span>${COMBAT_LABELS[combatKey]}</span>
         <span class="val">${combatVal}</span>
+        <button class="pm minus" data-i="${i}" ${minusDisabled ? "disabled" : ""}>-</button>
         <input type="number" class="alloc-input" data-i="${i}" value="${state.alloc[i]}">`;
     }
     grid.innerHTML = html;
