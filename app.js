@@ -541,21 +541,16 @@ function openSimWindow(state) {
       const val = (baseVal + state.alloc[i]).toFixed(2);
       const combatKey = combatOrder[i];
       const combatVal = s[combatKey].toFixed(2);
-      const minusDisabled = state.alloc[i] <= 0;
-      const plusDisabled = remain <= 0 || wouldBurst(state, i, 1);
+      const maxAllowed = state.manualPoints - (state.alloc.reduce((a, v) => a + v, 0) - state.alloc[i]);
       html += `
         <span>${TIER_LABELS[i]}</span>
         <span class="val">${val}</span>
-        <button class="pm plus" data-i="${i}" ${plusDisabled ? "disabled" : ""}>+</button>
         <span>${COMBAT_LABELS[combatKey]}</span>
         <span class="val">${combatVal}</span>
-        <button class="pm minus" data-i="${i}" ${minusDisabled ? "disabled" : ""}>-</button>
-        <input type="number" class="alloc-input" data-i="${i}" value="${state.alloc[i]}">`;
+        <input type="number" class="alloc-input" data-i="${i}" value="${state.alloc[i]}" min="0" max="${maxAllowed}">`;
     }
     grid.innerHTML = html;
 
-    grid.querySelectorAll(".minus").forEach((b) => b.addEventListener("click", () => adjust(Number(b.dataset.i), -1)));
-    grid.querySelectorAll(".plus").forEach((b) => b.addEventListener("click", () => adjust(Number(b.dataset.i), 1)));
     grid.querySelectorAll(".alloc-input").forEach((inp) => {
       inp.addEventListener("change", () => setAllocDirect(Number(inp.dataset.i), inp));
       inp.addEventListener("keydown", (e) => { if (e.key === "Enter") inp.blur(); });
