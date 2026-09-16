@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飾品道具資料庫</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #12162a;
+    --panel: #1b2140;
+    --panel-2: #232b52;
+    --line: #333e6e;
+    --gold: #c9a24b;
+    --gold-soft: #8e7639;
+    --text: #e9e6d8;
+    --text-dim: #9aa0c4;
+    --earth: #a67c3d;
+    --water: #4a9fd8;
+    --fire: #d1495b;
+    --wind: #5fb98a;
+    --danger: #d1495b;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(201,162,75,0.08), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(74,159,216,0.07), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans TC", sans-serif;
+    min-height:100vh;
+  }
+
+  .wrap{ max-width: 1400px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ---- Hero ---- */
+  header.hero{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap: 24px;
+    padding-bottom: 28px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .hero-eyebrow{
+    font-family:"JetBrains Mono", monospace;
+    letter-spacing: 0.18em;
+    font-size: 11px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1.title{
+    font-family:"Cinzel", serif;
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 44px);
+    margin: 0;
+    letter-spacing: 0.02em;
+    background: linear-gradient(180deg, #fff5da 0%, var(--gold) 65%, var(--gold-soft) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle{
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-size: 14px;
+    max-width: 520px;
+    line-height: 1.6;
+  }
+  .stat-pill{
+    font-family:"JetBrains Mono", monospace;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-size: 13px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .stat-pill b{ color: var(--gold); font-size: 16px; }
+
+  /* ---- Controls ---- */
+  .controls{
+    display:flex;
+    gap:14px;
+    flex-wrap: wrap;
+    align-items:center;
+    margin-bottom: 18px;
+  }
+  .search-box{
+    flex: 1 1 280px;
+    position: relative;
+  }
+  .search-box input{
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 13px 16px 13px 42px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: "Noto Sans TC", sans-serif;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .search-box input:focus{
+    border-color: var(--gold-soft);
+    box-shadow: 0 0 0 3px rgba(201,162,75,0.15);
+  }
+  .search-box svg{
+    position:absolute; left:14px; top:50%; transform: translateY(-50%);
+    width:16px; height:16px; stroke: var(--text-dim);
+  }
+  .filter-tabs{
+    display:flex; gap: 8px; flex-wrap: wrap;
+  }
+  .filter-tabs button{
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 13px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    padding: 10px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .filter-tabs button:hover{ border-color: var(--gold-soft); color: var(--text); }
+  .filter-tabs button.active{
+    background: linear-gradient(180deg, #d8b869, var(--gold-soft));
+    border-color: var(--gold-soft);
+    color: #1a1508;
+    font-weight: 700;
+  }
+
+  /* ---- Table ---- */
+  .table-scroll{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: auto;
+    max-height: 68vh;
+  }
+  table{
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1600px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12.5px;
+  }
+  thead th{
+    position: sticky; top:0; z-index:2;
+    background: var(--panel-2);
+    color: var(--gold);
+    text-align: left;
+    padding: 12px 12px;
+    font-weight: 600;
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+  thead th:first-child{ position: sticky; left:0; z-index:3; }
+  thead th .arrow{ opacity:0.35; font-size: 10px; margin-left:4px; }
+  thead th.sorted .arrow{ opacity:1; color:#fff; }
+  thead th:hover{ background:#2a3260; }
+
+  tbody td{
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(51,62,110,0.5);
+    white-space: nowrap;
+    color: var(--text);
+  }
+  tbody td:first-child{
+    position: sticky; left:0;
+    background: var(--panel);
+    font-family: "Noto Sans TC", sans-serif;
+    font-weight: 700;
+    color: #fff5da;
+  }
+  tbody tr:hover td{ background: #232c58; }
+  tbody tr:hover td:first-child{ background:#2a336a; }
+  tbody tr:nth-child(even) td{ background: rgba(255,255,255,0.02); }
+  tbody tr:nth-child(even):hover td{ background:#232c58; }
+
+  .empty-state{
+    text-align:center; padding: 60px 20px; color: var(--text-dim);
+    font-family: "Noto Sans TC", sans-serif;
+  }
+
+  .footnote{
+    margin-top: 18px;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .footnote code{
+    background: var(--panel);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    color: var(--gold);
+  }
+
+  ::-webkit-scrollbar{ height:10px; width:10px; }
+  ::-webkit-scrollbar-track{ background: var(--panel); }
+  ::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover{ background: var(--gold-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="hero-eyebrow">永恆初心 · 飾品道具資料庫</div>
+      <h1 class="title">飾品道具查詢表</h1>
+      <p class="subtitle">整合「特殊飾品頭飾」與「特惠禮盒頭飾」共 174 筆道具數值，支援搜尋與點欄位排序，可依分類篩選。</p>
+    </div>
+    <div class="stat-pill">目前收錄 <b id="countNum">0</b> 件道具</div>
+  </header>
+
+  <div class="controls">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="搜尋名稱、種類、特殊能力…">
+    </div>
+    <div class="filter-tabs" id="filterTabs"></div>
+  </div>
+
+  <div class="table-scroll">
+    <table id="dataTable">
+      <thead>
+        <tr id="headerRow"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <p class="footnote">
+    目前收錄 <code id="itemCountFootnote"></code> 筆道具（特殊飾品頭飾 149 筆＋特惠禮盒頭飾 25 筆）。資料來源：<a href="https://cg-originmood-dc.github.io/飾品道具/特殊飾品頭飾/特殊飾品頭飾" target="_blank" style="color:var(--gold)">cg-originmood-dc.github.io</a>（玩家整理自 Goodluck 的資料庫）。<br>
+    數值多由文字說明自動解析，範圍值（如「必殺+10~20」）採用上限值；如需核對原始描述，可看每列最右側「原始說明」欄位。「王寵/祕寶飾品」分類來源目前只有圖片沒有文字數據，尚未收錄，之後有文字版資料可以再補上。
+  </p>
+
+</div>
+
+<script>
+  // ---- 欄位定義（依你提供的「初心服首飾屬性表」截圖建立）----
+  const COLUMNS = [
+    { key: "category", label: "分類",     sortable: true, type: "text" },
+    { key: "name",     label: "名稱",     sortable: true, type: "text" },
+    { key: "hp",       label: "HP",       sortable: true, type: "num" },
+    { key: "mp",       label: "MP",       sortable: true, type: "num" },
+    { key: "atk",      label: "攻擊",     sortable: true, type: "num" },
+    { key: "def",      label: "防禦",     sortable: true, type: "num" },
+    { key: "agi",      label: "敏捷",     sortable: true, type: "num" },
+    { key: "crit",     label: "必殺",     sortable: true, type: "num" },
+    { key: "counter",  label: "反擊",     sortable: true, type: "num" },
+    { key: "hit",      label: "命中",     sortable: true, type: "num" },
+    { key: "dodge",    label: "閃避",     sortable: true, type: "num" },
+    { key: "regen",    label: "回復",     sortable: true, type: "num" },
+    { key: "spirit",   label: "精神",     sortable: true, type: "num" },
+    { key: "matk",     label: "魔攻",     sortable: true, type: "num" },
+    { key: "mres",     label: "抗魔",     sortable: true, type: "num" },
+    { key: "poison",   label: "毒",       sortable: true, type: "num" },
+    { key: "petrify",  label: "石化",     sortable: true, type: "num" },
+    { key: "confuse",  label: "混亂",     sortable: true, type: "num" },
+    { key: "forget",   label: "遠忘",     sortable: true, type: "num" },
+    { key: "drunk",    label: "抗酒醉",   sortable: true, type: "num" },
+    { key: "charm",    label: "魅力",     sortable: true, type: "num" },
+    { key: "earth",    label: "地屬性",   sortable: true, type: "num" },
+    { key: "water",    label: "水屬性",   sortable: true, type: "num" },
+    { key: "fire",     label: "火屬性",   sortable: true, type: "num" },
+    { key: "wind",     label: "風屬性",   sortable: true, type: "num" },
+    { key: "level",    label: "等級",     sortable: true, type: "text" },
+    { key: "durability", label: "耐久",   sortable: true, type: "text" },
+    { key: "effect",   label: "原始說明", sortable: true, type: "text" },
+  ];
+
+  // ---- 資料 ----
+  // 來源：cg-originmood-dc.github.io（永恆初心 Cross Gate 攻略，整理自玩家 Goodluck 的 Google Sites 資料庫）
+  // 含「特殊飾品頭飾」主表 149 筆 + 「特惠禮盒頭飾」25 筆，共 174 筆。
+  // 數值多數為文字說明直接解析而來；若原文為範圍值（例如 100~170），採用上限值；完整原始說明保留在「原始說明」欄位，可核對。
+  // 「王寵/祕寶飾品」分類目前來源僅有圖片、無文字數值，尚未收錄。
+  const ITEMS = [
+    { category:"特殊飾品頭飾", name:"輪迴之眼頭飾", level:"1", durability:"200", hp:400, mp:400, atk:170, def:0, agi:0, crit:20, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"生命+（300~400），魔力+（300~400），攻擊+（100~170），必殺+（10~20），水屬性+1" },
+    { category:"特殊飾品頭飾", name:"鬼瞳頭飾", level:"1", durability:"200", hp:0, mp:200, atk:30, def:0, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"魔力+200，攻擊+30，必殺+10，水屬性+1" },
+    { category:"特殊飾品頭飾", name:"天使之翼頭飾", level:"1", durability:"200", hp:400, mp:0, atk:0, def:0, agi:60, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:150, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300-400），精神+（100~150），敏捷+（30~60），可大幅提升偷襲魔族的概率。" },
+    { category:"特殊飾品頭飾", name:"光羽頭飾", level:"1", durability:"200", hp:350, mp:300, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:1, effect:"屬性：生命+350，魔力+300，敏捷+30，風屬性+1" },
+    { category:"特殊飾品頭飾", name:"死兆闇星頭飾", level:"1", durability:"200", hp:700, mp:0, atk:0, def:0, agi:100, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:20, forget:0, drunk:0, charm:0, earth:2, water:0, fire:0, wind:0, effect:"生命+（300~700），敏捷+（30~100），回復+（10~40），抗混亂+（5~20），地屬性+2" },
+    { category:"特殊飾品頭飾", name:"墮落殘星頭飾", level:"1", durability:"200", hp:300, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:5, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+300，敏捷+30，回復+10，抗混亂+5" },
+    { category:"特殊飾品頭飾", name:"滅卻之兆頭飾", level:"1", durability:"200", hp:200, mp:200, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200，魔力+200" },
+    { category:"特殊飾品頭飾", name:"傳說之冠頭飾", level:"1", durability:"200", hp:500, mp:0, atk:150, def:0, agi:0, crit:0, counter:30, hit:0, dodge:0, regen:150, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:1, wind:0, effect:"生命+（300~500），攻擊+（50~150），回復+（50~150），反擊+（10~30），火屬性+1" },
+    { category:"特殊飾品頭飾", name:"榮耀之冠頭飾", level:"1", durability:"200", hp:200, mp:200, atk:0, def:0, agi:0, crit:0, counter:10, hit:0, dodge:0, regen:50, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200，魔力+200，回復+50，反擊+10" },
+    { category:"特殊飾品頭飾", name:"初啟之冠頭飾", level:"1", durability:"200", hp:50, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50" },
+    { category:"特殊飾品頭飾", name:"日月之境頭飾", level:"1", durability:"200", hp:500, mp:0, atk:0, def:200, agi:60, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:1, water:1, fire:0, wind:0, effect:"生命+（300-500），敏捷+（30~60），閃避+（10~15），防禦+（100~200），地屬性+1，水屬性+1" },
+    { category:"特殊飾品頭飾", name:"滄山潭心頭飾", level:"1", durability:"200", hp:400, mp:0, atk:0, def:100, agi:40, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300-400），敏捷+（30~40），閃避+（5~10），防禦+（50~100）" },
+    { category:"特殊飾品頭飾", name:"碧波潭頭飾", level:"1", durability:"200", hp:0, mp:300, atk:0, def:50, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔力+300，防禦+50，回復+30" },
+    { category:"特殊飾品頭飾", name:"浪漫主義者頭飾", level:"1", durability:"300", hp:300, mp:0, atk:100, def:0, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:40, spirit:100, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:1, wind:0, effect:"生命+（200-300），閃避+（5~10），回復+（30~40），精神+（50~100），攻擊+（50~100），火屬性+1" },
+    { category:"特殊飾品頭飾", name:"冰霜奇緣頭飾", level:"1", durability:"200", hp:500, mp:0, atk:150, def:30, agi:0, crit:20, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:2, fire:0, wind:0, effect:"生命+（300-500），攻擊+（50~150），防禦+（10~30），必殺+（10~20），水屬性+2" },
+    { category:"特殊飾品頭飾", name:"寒霜頭飾", level:"1", durability:"200", hp:400, mp:0, atk:100, def:30, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"生命+（300-400），攻擊+（50~100），防禦+（10~30），必殺+（5~10），水屬性+1" },
+    { category:"特殊飾品頭飾", name:"冰雪頭飾", level:"1", durability:"200", hp:300, mp:0, atk:50, def:10, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"生命+300，攻擊+50，防禦+10，水屬性+1" },
+    { category:"特殊飾品頭飾", name:"烏嚕(綠)頭飾", level:"1", durability:"200", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+300，閃避+15，精神+50" },
+    { category:"特殊飾品頭飾", name:"喜悅的烏嚕頭飾", level:"1", durability:"200", hp:400, mp:400, atk:170, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300~400），魔力+（300~400），攻擊+（120~170），大幅增加偷襲魔族的概率" },
+    { category:"特殊飾品頭飾", name:"嬉笑的烏嚕頭飾", level:"1", durability:"200", hp:400, mp:500, atk:0, def:0, agi:60, crit:0, counter:0, hit:0, dodge:20, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300~400），魔力+（300~500），敏捷+（30~60），閃避+（10~20），略微提高幸運值" },
+    { category:"特殊飾品頭飾", name:"憤怒的烏嚕頭飾", level:"1", durability:"200", hp:600, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:20, regen:0, spirit:150, matk:200, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（500~600），閃避+（10~20），精神+（100~150），魔攻+（100~200）" },
+    { category:"特殊飾品頭飾", name:"哭泣的烏嚕頭飾", level:"1", durability:"200", hp:600, mp:0, atk:0, def:0, agi:50, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:15, confuse:15, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（500~600），敏捷+（30~50），抗昏睡+（10~15），抗混亂+（10~15），抗石化+（10~15）" },
+    { category:"特殊飾品頭飾", name:"飄飄白雲頭飾", level:"1", durability:"200", hp:200, mp:0, atk:0, def:50, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:50, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200，閃避+15，防禦+50，魔防+50" },
+    { category:"特殊飾品頭飾", name:"雷暴紫雲精靈頭飾", level:"1", durability:"200", hp:0, mp:0, atk:170, def:0, agi:50, crit:0, counter:0, hit:25, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:25, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+（120~170），敏捷+（30~50），命中+（15~25），抗混亂+（15~25）" },
+    { category:"特殊飾品頭飾", name:"幸運彩雲精靈頭飾", level:"1", durability:"200", hp:400, mp:400, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:20, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300~400），魔力+（300~400），閃避+（10~20），並大幅提升偷襲魔族的概率" },
+    { category:"特殊飾品頭飾", name:"艷陽祥雲精靈頭飾", level:"1", durability:"200", hp:600, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:50, spirit:0, matk:0, mres:0, poison:25, petrify:25, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（500~600），回復+（30~50），抗石化+（15~25），抗毒+（15~25）" },
+    { category:"特殊飾品頭飾", name:"傷感烏雲精靈頭飾", level:"1", durability:"200", hp:200, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:25, regen:0, spirit:50, matk:120, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150~200），精神+（30~50），魔攻+（100~120），閃避+（15~25），抗昏睡+（15~25）" },
+    { category:"特殊飾品頭飾", name:"任務賽天王", level:"1", durability:"300", hp:500, mp:500, atk:50, def:0, agi:0, crit:15, counter:15, hit:15, dodge:15, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500，魔力+500， 攻擊+50 ， 回復+30， 命中+15，閃避+15，必殺+15，反擊+15；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽巨星", level:"1", durability:"300", hp:350, mp:350, atk:20, def:0, agi:0, crit:10, counter:10, hit:10, dodge:10, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+350，魔力+350， 攻擊+20 ， 回復+20 ，命中+10，閃避+10，必殺+10，反擊+10；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽菁英", level:"1", durability:"300", hp:200, mp:200, atk:15, def:0, agi:0, crit:8, counter:8, hit:8, dodge:8, regen:15, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200， 魔力+200， 攻擊+15 ， 回復+15 ，命中+8，閃避+8，必殺+8，反擊+8；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽專家", level:"1", durability:"300", hp:100, mp:100, atk:10, def:0, agi:0, crit:5, counter:5, hit:5, dodge:5, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+100， 魔力+100， 攻擊+10， 回復+10 ，命中+5，閃避+5，必殺+5，反擊+5；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽新星", level:"1", durability:"300", hp:50, mp:50, atk:5, def:0, agi:0, crit:2, counter:2, hit:2, dodge:2, regen:5, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50 ，魔力+50 ，攻擊+5， 回復+5 ，命中+2，閃避+2，必殺+2，反擊+2；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"辰龍年新手頭飾(辰龍初生者)", level:"1", durability:"300", hp:200, mp:200, atk:20, def:0, agi:0, crit:5, counter:0, hit:0, dodge:5, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200，魔力+200，攻擊+20，必殺+5，精神+20，閃避+5，稍微增加偷襲率" },
+    { category:"特殊飾品頭飾", name:"辰龍年回歸頭飾(辰龍舊夢者)", level:"1", durability:"300", hp:300, mp:0, atk:30, def:0, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+300，攻擊+30，精神+30，閃避+10，稍微增加偷襲率" },
+    { category:"特殊飾品頭飾", name:"辰龍年活躍頭飾(辰龍探險者)", level:"1", durability:"300", hp:0, mp:300, atk:30, def:0, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔力+300，攻擊+30，精神+30，閃避+10，稍微增加偷襲率" },
+    { category:"特殊飾品頭飾", name:"任務賽至尊", level:"1", durability:"300", hp:500, mp:500, atk:0, def:0, agi:0, crit:15, counter:15, hit:15, dodge:15, regen:30, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500，魔力+500， 精神+30 ， 回復+30， 命中+15，閃避+15，必殺+15，反擊+15；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽宗師", level:"1", durability:"300", hp:350, mp:350, atk:0, def:0, agi:0, crit:10, counter:10, hit:10, dodge:10, regen:20, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+350，魔力+350， 精神+20 ， 回復+20 ，命中+10，閃避+10，必殺+10，反擊+10；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽大師", level:"1", durability:"300", hp:200, mp:200, atk:0, def:0, agi:0, crit:8, counter:8, hit:8, dodge:8, regen:15, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200， 魔力+200， 精神+15 ， 回復+15 ，命中+8，閃避+8，必殺+8，反擊+8；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽高手", level:"1", durability:"300", hp:100, mp:100, atk:0, def:0, agi:0, crit:5, counter:5, hit:5, dodge:5, regen:8, spirit:8, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+100， 魔力+100， 精神+8， 回復+8 ，命中+5，閃避+5，必殺+5，反擊+5；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽新手", level:"1", durability:"300", hp:50, mp:50, atk:0, def:0, agi:0, crit:2, counter:2, hit:2, dodge:2, regen:5, spirit:5, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50 ，魔力+50 ，精神+5， 回復+5 ，命中+2，閃避+2，必殺+2，反擊+2；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期冠軍頭飾", level:"1", durability:"300", hp:300, mp:250, atk:50, def:50, agi:0, crit:0, counter:0, hit:15, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（250-300），魔力+（200-250），防禦+（25-50），攻擊力+（25-50），精神+（25-50），命中+（10~15），閃避+（10~15）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期亞軍頭飾", level:"1", durability:"300", hp:250, mp:200, atk:40, def:40, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（200-250），魔力+（150-200），防禦+（15-40），攻擊力+（15-40），精神+（15-40），命中+（5-10），閃避+（5-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期4強頭飾", level:"1", durability:"300", hp:200, mp:150, atk:30, def:30, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150-200），魔力+（100-150），防禦+（5-30），攻擊力+（5-30），精神+（5-30），命中+（1-10），閃避+（1-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期8強頭飾", level:"1", durability:"300", hp:150, mp:100, atk:20, def:20, agi:0, crit:0, counter:0, hit:8, dodge:8, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（100-150），魔力+（50-100），防禦+（1-20），攻擊力+（1-20），精神+（1-20），命中+（1-8），閃避+（1-8）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期16強頭飾", level:"1", durability:"300", hp:100, mp:50, atk:15, def:15, agi:0, crit:0, counter:0, hit:6, dodge:6, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（50-100），魔力+（10-50），防禦+（1-15），攻擊力+（1-15），精神+（1-15），命中+（1-6），閃避+（1-6）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第X期32強頭飾", level:"1", durability:"300", hp:70, mp:50, atk:10, def:10, agi:0, crit:0, counter:0, hit:4, dodge:4, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（10-70），魔力+（10-50），防禦+（1-10），攻擊力+（1-10），精神+（1-10），命中+（1-4），閃避+（1-4）" },
+    { category:"特殊飾品頭飾", name:"水藍鼠木偶", level:"1", durability:"300", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:100, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔攻+100" },
+    { category:"特殊飾品頭飾", name:"寶石鼠木偶", level:"1", durability:"300", hp:0, mp:0, atk:100, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+100" },
+    { category:"特殊飾品頭飾", name:"惡夢鼠木偶", level:"1", durability:"300", hp:0, mp:300, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔力值+300" },
+    { category:"特殊飾品頭飾", name:"火焰鼠木偶", level:"1", durability:"300", hp:0, mp:0, atk:0, def:0, agi:0, crit:10, counter:10, hit:10, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+10，閃避+10，命中+10，反擊+10" },
+    { category:"特殊飾品頭飾", name:"大地鼠木偶", level:"1", durability:"300", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命值+300" },
+    { category:"特殊飾品頭飾", name:"任務賽神王", level:"1", durability:"300", hp:500, mp:500, atk:0, def:0, agi:30, crit:15, counter:15, hit:15, dodge:15, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500，魔力+500， 敏捷+30 ， 回復+30， 命中+15，閃避+15，必殺+15，反擊+15；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽王者", level:"1", durability:"300", hp:350, mp:350, atk:0, def:0, agi:20, crit:10, counter:10, hit:10, dodge:10, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+350，魔力+350， 敏捷+20 ， 回復+20 ，命中+10，閃避+10，必殺+10，反擊+10；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽達人", level:"1", durability:"300", hp:200, mp:200, atk:0, def:0, agi:15, crit:8, counter:8, hit:8, dodge:8, regen:15, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200， 魔力+200， 敏捷+15 ， 回復+15 ，命中+8，閃避+8，必殺+8，反擊+8；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽強者", level:"1", durability:"300", hp:100, mp:100, atk:0, def:0, agi:8, crit:5, counter:5, hit:5, dodge:5, regen:8, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+100， 魔力+100， 敏捷+8， 回復+8 ，命中+5，閃避+5，必殺+5，反擊+5；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"任務賽新手", level:"1", durability:"300", hp:50, mp:50, atk:0, def:0, agi:5, crit:2, counter:2, hit:2, dodge:2, regen:5, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50 ，魔力+50 ，敏捷+5， 回復+5 ，命中+2，閃避+2，必殺+2，反擊+2；耐久（100~200）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期冠軍頭飾", level:"1", durability:"300", hp:300, mp:250, atk:50, def:50, agi:0, crit:0, counter:0, hit:15, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（250-300），魔力+（200-250），防禦+（25-50），攻擊力+（25-50），精神+（25-50），命中+（10~15），閃避+（10~15）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期亞軍頭飾", level:"1", durability:"300", hp:250, mp:200, atk:40, def:40, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（200-250），魔力+（150-200），防禦+（15-40），攻擊力+（15-40），精神+（15-40），命中+（5-10），閃避+（5-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期4強頭飾", level:"1", durability:"300", hp:200, mp:150, atk:30, def:30, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150-200），魔力+（100-150），防禦+（5-30），攻擊力+（5-30），精神+（5-30），命中+（1-10），閃避+（1-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期8強頭飾", level:"1", durability:"300", hp:150, mp:100, atk:20, def:20, agi:0, crit:0, counter:0, hit:8, dodge:8, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（100-150），魔力+（50-100），防禦+（1-20），攻擊力+（1-20），精神+（1-20），命中+（1-8），閃避+（1-8）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期16強頭飾", level:"1", durability:"300", hp:100, mp:50, atk:15, def:15, agi:0, crit:0, counter:0, hit:6, dodge:6, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（50-100），魔力+（10-50），防禦+（1-15），攻擊力+（1-15），精神+（1-15），命中+（1-6），閃避+（1-6）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第三期32強頭飾", level:"1", durability:"300", hp:70, mp:50, atk:10, def:10, agi:0, crit:0, counter:0, hit:4, dodge:4, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（10-70），魔力+（10-50），防禦+（1-10），攻擊力+（1-10），精神+（1-10），命中+（1-4），閃避+（1-4）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期冠軍頭飾", level:"1", durability:"300", hp:300, mp:250, atk:50, def:50, agi:0, crit:0, counter:0, hit:15, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（250-300），魔力+（200-250），防禦+（25-50），攻擊力+（25-50），精神+（25-50），命中+（10~15），閃避+（10~15）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期亞軍頭飾", level:"1", durability:"300", hp:250, mp:200, atk:40, def:40, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（200-250），魔力+（150-200），防禦+（15-40），攻擊力+（15-40），精神+（15-40），命中+（5-10），閃避+（5-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期4強頭飾", level:"1", durability:"300", hp:200, mp:150, atk:30, def:30, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150-200），魔力+（100-150），防禦+（5-30），攻擊力+（5-30），精神+（5-30），命中+（1-10），閃避+（1-10）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期8強頭飾", level:"1", durability:"300", hp:150, mp:100, atk:20, def:20, agi:0, crit:0, counter:0, hit:8, dodge:8, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（100-150），魔力+（50-100），防禦+（1-20），攻擊力+（1-20），精神+（1-20），命中+（1-8），閃避+（1-8）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期16強頭飾", level:"1", durability:"300", hp:100, mp:50, atk:15, def:15, agi:0, crit:0, counter:0, hit:6, dodge:6, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（50-100），魔力+（10-50），防禦+（1-15），攻擊力+（1-15），精神+（1-15），命中+（1-6），閃避+（1-6）" },
+    { category:"特殊飾品頭飾", name:"爭霸賽第二期32強頭飾", level:"1", durability:"300", hp:70, mp:50, atk:10, def:10, agi:0, crit:0, counter:0, hit:4, dodge:4, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（10-70），魔力+（10-50），防禦+（1-10），攻擊力+（1-10），精神+（1-10），命中+（1-4），閃避+（1-4）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽冠軍頭飾", level:"1", durability:"300", hp:300, mp:250, atk:50, def:50, agi:0, crit:0, counter:0, hit:15, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（250-300），魔力+（200-250），防禦+（25-50），攻擊力+（25-50），精神+（25-50），命中+（10~15），閃避+（10~15）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽亞軍頭飾", level:"1", durability:"300", hp:250, mp:200, atk:40, def:40, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（200-250），魔力+（150-200），防禦+（15-40），攻擊力+（15-40），精神+（15-40），命中+（5-10），閃避+（5-10）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽4強頭飾", level:"1", durability:"300", hp:200, mp:150, atk:30, def:30, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150-200），魔力+（100-150），防禦+（5-30），攻擊力+（5-30），精神+（5-30），命中+（1-10），閃避+（1-10）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽8強頭飾", level:"1", durability:"300", hp:150, mp:100, atk:20, def:20, agi:0, crit:0, counter:0, hit:8, dodge:8, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（100-150），魔力+（50-100），防禦+（1-20），攻擊力+（1-20），精神+（1-20），命中+（1-8），閃避+（1-8）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽16強頭飾", level:"1", durability:"300", hp:100, mp:50, atk:15, def:15, agi:0, crit:0, counter:0, hit:6, dodge:6, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（50-100），魔力+（10-50），防禦+（1-15），攻擊力+（1-15），精神+（1-15），命中+（1-6），閃避+（1-6）" },
+    { category:"特殊飾品頭飾", name:"第一屆正式賽32強頭飾", level:"1", durability:"300", hp:70, mp:50, atk:10, def:10, agi:0, crit:0, counter:0, hit:4, dodge:4, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（10-70），魔力+（10-50），防禦+（1-10），攻擊力+（1-10），精神+（1-10），命中+（1-4），閃避+（1-4）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽冠軍", level:"1", durability:"300", hp:300, mp:250, atk:50, def:50, agi:0, crit:0, counter:0, hit:15, dodge:15, regen:0, spirit:50, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（250-300），魔力+（200-250），防禦+（25-50），攻擊力+（25-50），精神+（25-50），命中+（10~15），閃避+（10~15）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽亞軍", level:"1", durability:"300", hp:250, mp:200, atk:40, def:40, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（200-250），魔力+（150-200），防禦+（15-40），攻擊力+（15-40），精神+（15-40），命中+（5-10），閃避+（5-10）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽4強", level:"1", durability:"300", hp:200, mp:150, atk:30, def:30, agi:0, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（150-200），魔力+（100-150），防禦+（5-30），攻擊力+（5-30），精神+（5-30），命中+（1-10），閃避+（1-10）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽8強", level:"1", durability:"300", hp:150, mp:100, atk:20, def:20, agi:0, crit:0, counter:0, hit:8, dodge:8, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（100-150），魔力+（50-100），防禦+（1-20），攻擊力+（1-20），精神+（1-20），命中+（1-8），閃避+（1-8）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽16強", level:"1", durability:"300", hp:100, mp:50, atk:15, def:15, agi:0, crit:0, counter:0, hit:6, dodge:6, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（50-100），魔力+（10-50），防禦+（1-15），攻擊力+（1-15），精神+（1-15），命中+（1-6），閃避+（1-6）" },
+    { category:"特殊飾品頭飾", name:"PVP測試賽32強", level:"1", durability:"300", hp:70, mp:50, atk:10, def:10, agi:0, crit:0, counter:0, hit:4, dodge:4, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（10-70），魔力+（10-50），防禦+（1-10），攻擊力+（1-10），精神+（1-10），命中+（1-4），閃避+（1-4）" },
+    { category:"特殊飾品頭飾", name:"20週年草莓蛋糕頭飾", level:"1", durability:"112", hp:20, mp:50, atk:0, def:0, agi:0, crit:5, counter:10, hit:5, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+5、反擊+10、命中+5、閃躲+10、生命+20、魔力+50" },
+    { category:"特殊飾品頭飾", name:"20週年藍莓蛋糕頭飾", level:"1", durability:"191", hp:100, mp:100, atk:0, def:0, agi:0, crit:10, counter:5, hit:10, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+10、反擊+5、命中+10、閃躲+10、生命+100、魔力+100" },
+    { category:"特殊飾品頭飾", name:"一週年初心勇者頭飾", level:"1", durability:"200-250", hp:200, mp:150, atk:0, def:50, agi:30, crit:0, counter:10, hit:0, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"防禦+50、敏捷+30、反擊+10、閃躲+10、生命+200、魔力+150" },
+    { category:"特殊飾品頭飾", name:"一週年永恆勇者頭飾", level:"1", durability:"200-250", hp:250, mp:0, atk:30, def:0, agi:0, crit:10, counter:0, hit:10, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+30、回復+10、必殺+10、命中+10、生命+250" },
+    { category:"特殊飾品頭飾", name:"二週年永恆勇者頭飾", level:"1", durability:"200-250", hp:250, mp:0, atk:30, def:30, agi:0, crit:10, counter:0, hit:10, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+250 防禦+30 回復+10 攻擊+30 必殺+10 命中+10" },
+    { category:"特殊飾品頭飾", name:"二週年初心勇者頭飾", level:"1", durability:"200-250", hp:150, mp:200, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:30, matk:30, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+150 魔力+200 閃避+10 精神+30 魔攻+30 敏捷+30" },
+    { category:"特殊飾品頭飾", name:"21週年寵物至尊", level:"1", durability:"100-200", hp:500, mp:500, atk:0, def:30, agi:0, crit:15, counter:15, hit:15, dodge:15, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500，魔力+500， 防禦+30 ， 回復+30， 命中+15，閃避+15，必殺+15，反擊+15" },
+    { category:"特殊飾品頭飾", name:"21週年寵物宗師", level:"1", durability:"100-200", hp:350, mp:350, atk:0, def:20, agi:0, crit:10, counter:10, hit:10, dodge:10, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+350，魔力+350， 防禦+20 ，回復+20 ，命中+10，閃避+10，必殺+10，反擊+10" },
+    { category:"特殊飾品頭飾", name:"21週年寵物大師", level:"1", durability:"100-200", hp:200, mp:200, atk:0, def:15, agi:0, crit:8, counter:8, hit:8, dodge:8, regen:15, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200， 魔力+200， 防禦+15 ， 回復+15 ，命中+8，閃避+8，必殺+8，反擊+8" },
+    { category:"特殊飾品頭飾", name:"21週年寵物高手", level:"1", durability:"100-200", hp:100, mp:100, atk:0, def:8, agi:0, crit:5, counter:5, hit:5, dodge:5, regen:8, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+100， 魔力+100， 防禦+8， 回復+8 ，命中+5，閃避+5，必殺+5，反擊+5" },
+    { category:"特殊飾品頭飾", name:"21週年寵物新手", level:"1", durability:"100-200", hp:50, mp:50, atk:0, def:5, agi:0, crit:2, counter:2, hit:2, dodge:2, regen:5, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50 ，魔力+50 ，防禦+5， 回復+5 ，命中+2，閃避+2，必殺+2，反擊+2" },
+    { category:"特殊飾品頭飾", name:"21週年連破戰神王", level:"1", durability:"100-200", hp:500, mp:500, atk:0, def:0, agi:30, crit:15, counter:15, hit:15, dodge:15, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500，魔力+500， 敏捷+30 ， 精神+30， 命中+15，閃避+15，必殺+15，反擊+15" },
+    { category:"特殊飾品頭飾", name:"21週年連破戰王者", level:"1", durability:"100-200", hp:350, mp:350, atk:0, def:0, agi:20, crit:10, counter:10, hit:10, dodge:10, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+350，魔力+350， 敏捷+20 ，精神+20 ，命中+10，閃避+10，必殺+10，反擊+10" },
+    { category:"特殊飾品頭飾", name:"21週年連破戰達人", level:"1", durability:"100-200", hp:200, mp:200, atk:0, def:0, agi:15, crit:8, counter:8, hit:8, dodge:8, regen:0, spirit:15, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+200， 魔力+200， 敏捷+15 ， 精神+15 ，命中+8，閃避+8，必殺+8，反擊+8" },
+    { category:"特殊飾品頭飾", name:"21週年連破戰強者", level:"1", durability:"100-200", hp:100, mp:100, atk:0, def:0, agi:8, crit:5, counter:5, hit:5, dodge:5, regen:0, spirit:8, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+100， 魔力+100， 敏捷+8， 精神+8 ，命中+5，閃避+5，必殺+5，反擊+5" },
+    { category:"特殊飾品頭飾", name:"21週年連破戰新手", level:"1", durability:"100-200", hp:50, mp:50, atk:0, def:0, agi:5, crit:2, counter:2, hit:2, dodge:2, regen:0, spirit:5, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+50 ，魔力+50 ，敏捷+5， 精神+5 ，命中+2，閃避+2，必殺+2，反擊+2" },
+    { category:"特殊飾品頭飾", name:"元素原石", level:"1", durability:"200", hp:250, mp:0, atk:40, def:75, agi:15, crit:0, counter:0, hit:0, dodge:0, regen:15, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+250 防禦+75 攻擊+40 敏捷+15 回復+15" },
+    { category:"特殊飾品頭飾", name:"大地靈石", level:"1", durability:"200", hp:350, mp:0, atk:0, def:150, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:2, water:0, fire:0, wind:0, effect:"生命+350 防禦+150 地屬性+2" },
+    { category:"特殊飾品頭飾", name:"寒冰靈石", level:"1", durability:"200", hp:350, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:2, fire:0, wind:0, effect:"生命+350 回復+30 水屬性+2" },
+    { category:"特殊飾品頭飾", name:"火焰靈石", level:"1", durability:"200", hp:350, mp:0, atk:80, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:2, wind:0, effect:"生命+350 攻擊+80 火屬性+2" },
+    { category:"特殊飾品頭飾", name:"烈風靈石", level:"1", durability:"200", hp:350, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:2, effect:"生命+350 敏捷+30 風屬性+2" },
+    { category:"特殊飾品頭飾", name:"地水精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:200, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:2, water:1, fire:0, wind:0, effect:"生命+400 防禦+200 回復+40 地屬性+2 水屬性+1" },
+    { category:"特殊飾品頭飾", name:"地火精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:200, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:2, water:0, fire:1, wind:0, effect:"生命+400 防禦+200 攻擊+100 地屬性+2 火屬性+1" },
+    { category:"特殊飾品頭飾", name:"地風精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:200, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:2, water:0, fire:0, wind:1, effect:"生命+400 防禦+200 敏捷+40 地屬性+2 風屬性+1" },
+    { category:"特殊飾品頭飾", name:"水地精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:200, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:1, water:2, fire:0, wind:0, effect:"生命+400 防禦+200 回復+40 水屬性+2 地屬性+1" },
+    { category:"特殊飾品頭飾", name:"水火精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:2, fire:1, wind:0, effect:"生命+400 攻擊+100 回復+40 水屬性+2 火屬性+1" },
+    { category:"特殊飾品頭飾", name:"水風精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:0, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:2, fire:0, wind:1, effect:"生命+400 敏捷+40 回復+40 水屬性+2 風屬性+1" },
+    { category:"特殊飾品頭飾", name:"火地精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:200, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:1, water:0, fire:2, wind:0, effect:"生命+400 防禦+200 攻擊+100 火屬性+2 地屬性+1" },
+    { category:"特殊飾品頭飾", name:"火水精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:2, wind:0, effect:"生命+400 回復+40 攻擊+100 火屬性+2 水屬性+1" },
+    { category:"特殊飾品頭飾", name:"火風精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:0, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:2, wind:1, effect:"生命+400 敏捷+40 攻擊+100 火屬性+2 風屬性+1" },
+    { category:"特殊飾品頭飾", name:"風地精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:200, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:1, water:0, fire:0, wind:2, effect:"生命+400 敏捷+40 防禦+200 風屬性+2 地屬性+1" },
+    { category:"特殊飾品頭飾", name:"風水精靈石", level:"1", durability:"200", hp:400, mp:0, atk:0, def:0, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:2, effect:"生命+400 敏捷+40 回復+40 風屬性+2 水屬性+1" },
+    { category:"特殊飾品頭飾", name:"風火精靈石", level:"1", durability:"200", hp:400, mp:0, atk:100, def:0, agi:40, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:1, wind:2, effect:"生命+400 敏捷+40 攻擊+100 風屬性+2 火屬性+1" },
+    { category:"特殊飾品頭飾", name:"怒氣火焰1階", level:"1", durability:"200", hp:150, mp:0, atk:30, def:10, agi:20, crit:10, counter:0, hit:0, dodge:0, regen:5, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+150；防禦+10；回復+5；攻擊+30； 敏捷+20；必殺+10" },
+    { category:"特殊飾品頭飾", name:"怒氣火焰2階", level:"1", durability:"200", hp:200, mp:0, atk:50, def:10, agi:25, crit:15, counter:0, hit:0, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（151~200）；防禦+（6~10）；回復+（6~10）；攻擊+（31~50）； 敏捷+（21~25）；必殺+（11~15）" },
+    { category:"特殊飾品頭飾", name:"怒氣火焰3階", level:"1", durability:"200", hp:250, mp:0, atk:90, def:15, agi:30, crit:20, counter:0, hit:0, dodge:0, regen:15, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（201~250）；防禦+（11~15）；回復+（11~15）；攻擊+（51~90）； 敏捷+（26~30）；必殺+（16~20）" },
+    { category:"特殊飾品頭飾", name:"怒氣火焰4階", level:"1", durability:"200", hp:300, mp:0, atk:120, def:20, agi:35, crit:25, counter:0, hit:0, dodge:0, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（251~300）；防禦+（16~20）；回復+（16~20）；攻擊+（91~120）； 敏捷+（31~35）；必殺+（21~25）" },
+    { category:"特殊飾品頭飾", name:"怒氣火焰5階", level:"1", durability:"200", hp:350, mp:0, atk:150, def:30, agi:45, crit:30, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（301~350）；防禦+（21~30）；回復+（21~30）；攻擊+（121~150）； 敏捷+（36~45）；必殺+（26~30）" },
+    { category:"特殊飾品頭飾", name:"魔人之戒", level:"1", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+15、生命+150" },
+    { category:"特殊飾品頭飾", name:"惡夢貓帽子", level:"1", durability:"100", hp:150, mp:0, atk:10, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+10、必殺+5、生命+150" },
+    { category:"特殊飾品頭飾", name:"貓隊長帽子", level:"1", durability:"100", hp:0, mp:200, atk:0, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"精神+10、必殺+5、魔力+200" },
+    { category:"特殊飾品頭飾", name:"聖龍的守護", level:"1", durability:"232", hp:150, mp:150, atk:0, def:150, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"防禦+150、生命+150、抗魔力+150" },
+    { category:"特殊飾品頭飾", name:"虎靈守護", level:"5", durability:"50", hp:50, mp:50, atk:0, def:15, agi:0, crit:0, counter:0, hit:0, dodge:5, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"防禦+15、閃躲+5、生命+50、魔力+50" },
+    { category:"特殊飾品頭飾", name:"虎靈項鍊", level:"5", durability:"50", hp:50, mp:100, atk:10, def:10, agi:10, crit:3, counter:0, hit:0, dodge:3, regen:10, spirit:10, matk:0, mres:10, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+10、防禦+10、敏捷+10、精神+10、回復+10、必殺+3、閃躲+3、生命+50、魔力+100、抗魔+10" },
+    { category:"特殊飾品頭飾", name:"能力兔耳", level:"1", durability:"200", hp:0, mp:0, atk:0, def:0, agi:20, crit:10, counter:0, hit:0, dodge:5, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+20、必殺+10、閃躲+5" },
+    { category:"特殊飾品頭飾", name:"兔耳", level:"1", durability:"80", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"無" },
+    { category:"特殊飾品頭飾", name:"兔子頭套", level:"1", durability:"80", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"無" },
+    { category:"特殊飾品頭飾", name:"活耀勇者戒指", level:"5", durability:"100", hp:100, mp:50, atk:15, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+15、必殺+5、生命+100、魔力+50" },
+    { category:"特殊飾品頭飾", name:"活耀勇者頭飾", level:"1", durability:"100", hp:100, mp:100, atk:30, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+30、精神+30、必殺+5、生命+100、魔力+100" },
+    { category:"特殊飾品頭飾", name:"大地鼠帽", level:"1", durability:"105", hp:0, mp:0, atk:0, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+5" },
+    { category:"特殊飾品頭飾", name:"大地鼠帽", level:"1", durability:"112", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:5, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"命中+5" },
+    { category:"特殊飾品頭飾", name:"寶石鼠帽", level:"1", durability:"119", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:5, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"反擊+5" },
+    { category:"特殊飾品頭飾", name:"惡夢鼠帽", level:"1", durability:"106", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:5, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"閃躲+5" },
+    { category:"特殊飾品頭飾", name:"水藍鼠帽", level:"1", durability:"114", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+10" },
+    { category:"特殊飾品頭飾", name:"大地鼠木偶", level:"1", durability:"114", hp:50, mp:30, atk:5, def:30, agi:5, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:5, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+5、防禦+30、敏捷+5、精神+5、生命+50、魔力+30" },
+    { category:"特殊飾品頭飾", name:"火焰鼠木偶", level:"1", durability:"156", hp:50, mp:30, atk:30, def:5, agi:5, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:5, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+30、防禦+5、敏捷+5、精神+5、生命+50、魔力+30" },
+    { category:"特殊飾品頭飾", name:"寶石鼠木偶", level:"1", durability:"149", hp:50, mp:30, atk:5, def:5, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:5, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+5、防禦+5、敏捷+30、精神+5、生命+50、魔力+30" },
+    { category:"特殊飾品頭飾", name:"惡夢鼠木偶", level:"1", durability:"135", hp:50, mp:30, atk:5, def:5, agi:5, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+5、防禦+5、敏捷+5、精神+30、生命+50、魔力+30" },
+    { category:"特殊飾品頭飾", name:"水藍鼠木偶", level:"1", durability:"183", hp:50, mp:120, atk:10, def:10, agi:10, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+10、防禦+10、敏捷+10、精神+10、生命+50、魔力+120" },
+    { category:"特殊飾品頭飾", name:"大地鼠頭蓋帽", level:"1", durability:"200", hp:80, mp:50, atk:0, def:20, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:20, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"防禦+20、生命+80、魔力+50、抗魔+20" },
+    { category:"特殊飾品頭飾", name:"可愛大地鼠帽", level:"1", durability:"200", hp:250, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:10, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"精神+10、閃躲+10、生命+250" },
+    { category:"特殊飾品頭飾", name:"小雞帽", level:"1", durability:"181", hp:0, mp:15, atk:0, def:0, agi:0, crit:0, counter:0, hit:5, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"命中+5、魔力+15" },
+    { category:"特殊飾品頭飾", name:"足球", level:"1", durability:"280", hp:0, mp:0, atk:1, def:0, agi:5, crit:0, counter:4, hit:0, dodge:3, regen:2, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+1、敏捷+5、回復+2、反擊+4、閃躲+3" },
+    { category:"特殊飾品頭飾", name:"金龍花之冠", level:"1", durability:"200", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:5, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:10, earth:0, water:0, fire:0, wind:0, effect:"精神+20、閃躲+5、魅力+10" },
+    { category:"特殊飾品頭飾", name:"頑固蘑菇", level:"1", durability:"52", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:15, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"抗石化+15" },
+    { category:"特殊飾品頭飾", name:"多尼的雨傘", level:"1", durability:"300", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:6, petrify:6, confuse:8, forget:5, drunk:6, charm:0, earth:0, water:0, fire:0, wind:0, effect:"抗毒+6、抗昏睡-3、抗石化+6、抗酒醉+6、抗混亂+8、抗遺忘-5" },
+    { category:"特殊飾品頭飾", name:"天線", level:"1", durability:"317", hp:0, mp:0, atk:0, def:0, agi:1, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:10, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+1、抗混亂+10" },
+    { category:"特殊飾品頭飾", name:"雙節棍", level:"1", durability:"500", hp:0, mp:0, atk:20, def:0, agi:0, crit:2, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+20、必殺+2" },
+    { category:"特殊飾品頭飾", name:"冷靜之花", level:"1", durability:"47", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:15, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"抗混亂+15" },
+    { category:"特惠禮盒頭飾", name:"春丸子頭飾", level:"1", durability:"300", hp:0, mp:300, atk:0, def:30, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[春丸子禮盒] 防禦+30、魔力+300" },
+    { category:"特惠禮盒頭飾", name:"果凍史萊姆造型帽", level:"1", durability:"200", hp:0, mp:150, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[可愛史萊姆] 敏捷+30、魔力+150" },
+    { category:"特惠禮盒頭飾", name:"史萊姆造型帽", level:"1", durability:"200", hp:150, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:30, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[可愛史萊姆] 精神+30、生命+150" },
+    { category:"特惠禮盒頭飾", name:"霸氣飛機頭", level:"1", durability:"200", hp:150, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[霸氣少年] 閃躲+15、生命+150" },
+    { category:"特惠禮盒頭飾", name:"煞氣飛機頭", level:"1", durability:"200", hp:150, mp:0, atk:0, def:0, agi:0, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[霸氣少年] 必殺+15、生命+150" },
+    { category:"特惠禮盒頭飾", name:"蝴蝶結", level:"1", durability:"200", hp:0, mp:0, atk:0, def:150, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:20, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[21週年少女] 防禦+150、精神+20" },
+    { category:"特惠禮盒頭飾", name:"公主頭", level:"1", durability:"200", hp:0, mp:0, atk:0, def:150, agi:20, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[21週年少女] 防禦+150、敏捷+20" },
+    { category:"特惠禮盒頭飾", name:"教皇青蓮", level:"1", durability:"200", hp:0, mp:0, atk:0, def:150, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:50, earth:0, water:0, fire:0, wind:0, effect:"[教皇祝福] 防禦+150、閃躲+10、魅力+50" },
+    { category:"特惠禮盒頭飾", name:"教皇金蓮", level:"1", durability:"200", hp:0, mp:250, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:50, earth:0, water:0, fire:0, wind:0, effect:"[教皇祝福] 回復+10、魔力+250、魅力+50" },
+    { category:"特惠禮盒頭飾", name:"霸王菇", level:"1", durability:"200", hp:200, mp:200, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:5, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[熱帶雨林] 閃躲+5、生命+200、魔力+200" },
+    { category:"特惠禮盒頭飾", name:"霸王花", level:"1", durability:"200", hp:200, mp:200, atk:0, def:0, agi:0, crit:5, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[熱帶雨林] 必殺+5、生命+200、魔力+200" },
+    { category:"特惠禮盒頭飾", name:"爆炸頭(男款)", level:"1", durability:"200", hp:0, mp:0, atk:50, def:0, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[時尚達人] 攻擊+50、必殺+10" },
+    { category:"特惠禮盒頭飾", name:"爆炸頭(女款)", level:"1", durability:"200", hp:250, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:5, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[時尚達人] 回復+5、生命+250" },
+    { category:"特惠禮盒頭飾", name:"玩具加農砲", level:"1", durability:"200", hp:0, mp:0, atk:10, def:0, agi:0, crit:0, counter:0, hit:15, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:10, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[玩具禮盒] 攻擊+10、抗混亂+10、命中+15" },
+    { category:"特惠禮盒頭飾", name:"玩具煙囪", level:"1", durability:"200", hp:200, mp:0, atk:10, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:100, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[玩具禮盒] 攻擊+10、生命+200、抗魔+100" },
+    { category:"特惠禮盒頭飾", name:"春日花", level:"1", durability:"200", hp:0, mp:0, atk:20, def:20, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[春季禮盒] 攻擊+20、防禦+20、回復+20" },
+    { category:"特惠禮盒頭飾", name:"春日草", level:"1", durability:"200", hp:50, mp:0, atk:0, def:0, agi:10, crit:0, counter:0, hit:10, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[春季禮盒] 敏捷+10、命中+10、閃躲+10、生命+50" },
+    { category:"特惠禮盒頭飾", name:"運動太陽眼鏡", level:"1", durability:"200", hp:0, mp:0, atk:0, def:0, agi:0, crit:15, counter:0, hit:15, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[學院風禮盒] 必殺+15、命中+15" },
+    { category:"特惠禮盒頭飾", name:"學者眼鏡", level:"1", durability:"200", hp:100, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:10, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[學院風禮盒] 敏捷+30、回復+10、生命+100" },
+    { category:"特惠禮盒頭飾", name:"黑色紳士禮帽", level:"1", durability:"200", hp:0, mp:0, atk:30, def:0, agi:30, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[紳士禮盒] 攻擊+30、敏捷+30、必殺+15" },
+    { category:"特惠禮盒頭飾", name:"白色紳士禮帽", level:"1", durability:"200", hp:100, mp:100, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[紳士禮盒] 閃躲+15、生命+100、魔力+100" },
+    { category:"特惠禮盒頭飾", name:"萬聖節南瓜頭", level:"1", durability:"200", hp:100, mp:0, atk:0, def:50, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:10, forget:10, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[萬聖之夜] 防禦+50、抗混亂+10、抗遺忘+10、生命+100" },
+    { category:"特惠禮盒頭飾", name:"天使派隊帽", level:"1", durability:"200", hp:0, mp:0, atk:30, def:30, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 攻擊+30、防禦+30、敏捷+30" },
+    { category:"特惠禮盒頭飾", name:"惡魔派對帽", level:"1", durability:"200", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:30, matk:30, mres:30, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 精神+30、魔攻+30、抗魔+30" },
+    { category:"特惠禮盒頭飾", name:"彩帶派對帽", level:"1", durability:"200", hp:150, mp:50, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 回復+30、生命+150、魔力+50" },
+  ];
+
+  // ---- 狀態 ----
+  let sortKey = "name";
+  let sortDir = "asc";
+  let activeCategory = "全部";
+  let searchTerm = "";
+
+  const headerRow = document.getElementById("headerRow");
+  const tableBody = document.getElementById("tableBody");
+  const filterTabs = document.getElementById("filterTabs");
+  const searchInput = document.getElementById("searchInput");
+  const countNum = document.getElementById("countNum");
+  const itemCountFootnote = document.getElementById("itemCountFootnote");
+
+  itemCountFootnote.textContent = ITEMS.length + " 筆";
+
+  function renderHeader(){
+    headerRow.innerHTML = "";
+    COLUMNS.forEach(col => {
+      const th = document.createElement("th");
+      th.dataset.key = col.key;
+      const arrow = sortKey === col.key ? (sortDir === "asc" ? "▲" : "▼") : "◆";
+      th.innerHTML = `${col.label}<span class="arrow">${arrow}</span>`;
+      if (sortKey === col.key) th.classList.add("sorted");
+      th.addEventListener("click", () => {
+        if (sortKey === col.key) {
+          sortDir = sortDir === "asc" ? "desc" : "asc";
+        } else {
+          sortKey = col.key;
+          sortDir = "asc";
+        }
+        renderAll();
+      });
+      headerRow.appendChild(th);
+    });
+  }
+
+  function renderTabs(){
+    const cats = ["全部", ...Array.from(new Set(ITEMS.map(i => i.category)))];
+    filterTabs.innerHTML = "";
+    cats.forEach(cat => {
+      const btn = document.createElement("button");
+      btn.textContent = cat;
+      if (cat === activeCategory) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        activeCategory = cat;
+        renderAll();
+      });
+      filterTabs.appendChild(btn);
+    });
+  }
+
+  function cellHTML(col, item){
+    const val = item[col.key];
+    if (col.type === "num") {
+      return val ? val : `<span style="color:#565f92">—</span>`;
+    }
+    if (col.type === "text") {
+      return val ? val : `<span style="color:#565f92">—</span>`;
+    }
+    return val;
+  }
+
+  function renderBody(){
+    let rows = ITEMS.filter(item => {
+      const matchCat = activeCategory === "全部" || item.category === activeCategory;
+      const haystack = (item.name + " " + item.category + " " + item.effect).toLowerCase();
+      const matchSearch = haystack.includes(searchTerm.toLowerCase());
+      return matchCat && matchSearch;
+    });
+
+    rows.sort((a, b) => {
+      let av = a[sortKey], bv = b[sortKey];
+      if (typeof av === "string" && typeof bv === "string") {
+        return sortDir === "asc" ? av.localeCompare(bv, "zh-Hant") : bv.localeCompare(av, "zh-Hant");
+      }
+      return sortDir === "asc" ? av - bv : bv - av;
+    });
+
+    tableBody.innerHTML = "";
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="${COLUMNS.length}" class="empty-state">找不到符合的道具，換個關鍵字試試看</td>`;
+      tableBody.appendChild(tr);
+    } else {
+      rows.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = COLUMNS.map(col => `<td>${cellHTML(col, item)}</td>`).join("");
+        tableBody.appendChild(tr);
+      });
+    }
+    countNum.textContent = rows.length;
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderTabs();
+    renderBody();
+  }
+
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value;
+    renderBody();
+  });
+
+  renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>初心寵物算檔模擬</title>
+<style>
+  :root {
+    --bg: #efe4cf;
+    --panel-bg: #f5ecd9;
+    --dark: #2b3a3a;
+    --accent: #3f6d6d;
+    --orange: #c96a2e;
+    --result-bg: #1f2b2b;
+    --result-fg: #dfe8e8;
+    --gold: #f2d98d;
+    --green-bg: #d9f7d9;
+    --green-fg: #1f9d55;
+    --black: #000;
+    --white-txt: #e8e0c0;
+    --cyan-txt: #8fd0c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: var(--bg); color: var(--dark); font-size: 14px;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; border-radius: 4px; padding: 5px 10px; }
+  input, select { font-family: inherit; padding: 4px 6px; border: 1px solid #b8a888; border-radius: 3px; }
+  .layout { display: flex; gap: 8px; padding: 8px; align-items: flex-start; }
+  .left-panel { width: 360px; flex-shrink: 0; }
+  .btn-fold { background: #ddd; margin-bottom: 6px; }
+  .right-panel { flex: 1; min-width: 0; }
+
+  .box {
+    background: var(--panel-bg); border: 1px solid #cbb98f; border-radius: 6px;
+    padding: 8px; margin-bottom: 8px;
+  }
+  .box-title { font-weight: bold; color: var(--dark); margin-bottom: 6px; font-size: 13px; }
+
+  .row { display: flex; align-items: center; gap: 6px; margin: 4px 0; flex-wrap: wrap; }
+  .row label { white-space: nowrap; }
+  .grow-input-group { display: flex; gap: 4px; }
+  .grow-input-group input { width: 42px; text-align: center; }
+
+  #selectedPetLabel {
+    display: inline-block; width: 200px; font-weight: bold; padding: 4px 8px;
+    border-radius: 4px; background: #eee; color: #888;
+  }
+  #selectedPetLabel.active { background: var(--green-bg); color: var(--green-fg); }
+
+  .info-row span { margin-right: 12px; color: #555; }
+
+  .stat-cols { display: flex; gap: 12px; }
+  .stat-cols > div { flex: 1; }
+  .stat-cols input { width: 100%; }
+  .lvl1-label { color: #2e7d32; }
+
+  .mode-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .mode-btn { width: 32px; background: #ddd; color: #333; }
+  .mode-btn.active { background: var(--orange); color: white; }
+
+  table.pet-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.pet-table th, table.pet-table td { padding: 4px 6px; text-align: center; white-space: nowrap; }
+  table.pet-table th { background: #33413f; color: var(--gold); cursor: pointer; user-select: none; position: sticky; top: 0; }
+  table.pet-table td.name-col, table.pet-table td.skill-col, table.pet-table th.name-col, table.pet-table th.skill-col { text-align: left; white-space: normal; }
+  table.pet-table tbody tr { background: var(--result-bg); color: var(--result-fg); }
+  table.pet-table tbody tr:nth-child(even) { background: #24302f; }
+  table.pet-table tbody tr.selected { background: var(--green-bg) !important; color: var(--green-fg) !important; }
+  #petListWrap { max-height: 260px; overflow: auto; border: 1px solid #333; border-radius: 4px; }
+
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .result-box { background: var(--panel-bg); border-radius: 6px; padding: 6px; min-height: 180px; }
+  .result-box h4 { margin: 0 0 6px 0; font-size: 12px; color: var(--dark); }
+  .result-box .inner { background: var(--result-bg); color: var(--result-fg); border-radius: 4px; padding: 6px; height: 160px; overflow: auto; font-size: 12px; }
+  table.res-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.res-table th, table.res-table td { padding: 3px 6px; text-align: center; }
+  table.res-table th { color: var(--gold); }
+
+  #simWindows { position: relative; }
+  .sim-window {
+    position: fixed; width: 340px; background: var(--black); color: var(--white-txt);
+    border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    font-size: 13px; z-index: 500; max-height: 90vh; overflow-y: auto;
+  }
+  .sim-window .titlebar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 8px; cursor: move; border-bottom: 1px solid #333;
+  }
+  .sim-window .titlebar .name { color: var(--gold); font-weight: bold; }
+  .sim-window .titlebar button { background: #8a2a2a; color: white; }
+  .sim-window .body { padding: 8px; }
+  .sim-window .line2 { color: var(--white-txt); margin: 4px 0; }
+  .sim-window .sub { color: var(--cyan-txt); font-size: 12px; }
+  .sim-grid { display: grid; grid-template-columns: auto auto auto auto auto; gap: 3px 8px; align-items: center; margin: 6px 0; }
+  .sim-grid .remain { grid-column: 1 / 6; color: var(--cyan-txt); margin-bottom: 4px; }
+  .sim-grid .val { text-align: right; }
+  .sim-grid .alloc-input {
+    width: 52px; background: #1a1a1a; color: #7fd97f; border: 1px solid #444;
+    border-radius: 3px; text-align: right; padding: 2px 4px;
+  }
+  .alloc-badge { color: #7fd97f; }
+  .skills-line { color: var(--cyan-txt); font-size: 12px; margin-top: 6px; word-break: break-all; }
+
+  .hint { color: #666; font-size: 12px; }
+  .btn-primary { background: var(--accent); color: white; width: 100%; margin-bottom: 4px; }
+  .btn-danger { background: #8a4a4a; color: white; width: 100%; }
+  .btn-orange { background: var(--orange); color: white; }
+  #statusMsg { color: #555; font-size: 12px; margin-left: 8px; }
+
+  #toast {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: #222; color: white; padding: 10px 20px; border-radius: 6px;
+    display: none; z-index: 999; max-width: 80vw; white-space: pre-wrap; font-size: 13px;
+  }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 998;
+    align-items: center; justify-content: center;
+  }
+  .modal-box {
+    background: var(--panel-bg); border-radius: 8px; padding: 20px; max-width: 420px; width: 90%;
+  }
+  .modal-box .actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- 左側：模擬成長（預設隱藏，按右側「模擬成長」按鈕才展開） -->
+  <div id="leftExpanded" class="left-panel" style="display:none">
+    <button id="btnCollapseLeft" class="btn-fold">◀ 收合</button>
+    <div class="box">
+      <div class="box-title">初心寵物算檔模擬</div>
+      <div id="simPetName" style="font-weight:bold">寵物名稱：請在右側選擇寵物</div>
+      <div id="simPetInfo" class="hint">基礎資訊：種族:- | 屬性:- | 技能欄:-格</div>
+      <div id="simPetSkills" class="hint">技能清單：-</div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">模擬成長參數設定</div>
+      <div class="row"><label>入手等級：</label><input type="number" id="simFromLvl" value="1" min="1" style="width:70px"></div>
+      <div class="row"><label>目標等級：</label><input type="number" id="simTargetLvl" value="1" min="1" style="width:70px"></div>
+      <div class="row"><label>升級配點：</label>
+        <select id="simGrowType">
+          <option>完全不點</option>
+          <option>統加體力</option>
+          <option>統加力量</option>
+          <option>統加防禦</option>
+          <option>統加敏捷</option>
+          <option>統加魔法</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">模擬掉檔（體/力/防/敏/魔）</div>
+      <div class="grow-input-group">
+        <input type="number" id="drop0" value="0" min="0" max="4">
+        <input type="number" id="drop1" value="0" min="0" max="4">
+        <input type="number" id="drop2" value="0" min="0" max="4">
+        <input type="number" id="drop3" value="0" min="0" max="4">
+        <input type="number" id="drop4" value="0" min="0" max="4">
+      </div>
+      <div class="box-title" style="margin-top:8px">隨機檔（0~10，5軸總和應為10）：</div>
+      <div class="grow-input-group">
+        <input type="number" id="rand0" value="2" min="0" max="10">
+        <input type="number" id="rand1" value="2" min="0" max="10">
+        <input type="number" id="rand2" value="2" min="0" max="10">
+        <input type="number" id="rand3" value="2" min="0" max="10">
+        <input type="number" id="rand4" value="2" min="0" max="10">
+        <button id="btnResetRandom">重置</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btnSimulate">⚡ 模擬成長（開新視窗）</button>
+    <button class="btn-danger" id="btnClearSim">🗑 關閉全部視窗</button>
+    <div class="hint" style="margin-top:6px">每次按「模擬成長」都會另外開一個可拖曳移動的視窗；<br>舊視窗會保留，除非按視窗右上角關閉</div>
+    <div class="hint" id="simWindowCount" style="margin-top:4px">目前開啟中的模擬視窗：0 個</div>
+  </div>
+
+  <!-- 右側：搜尋/算檔 -->
+  <div class="right-panel">
+    <div class="box">
+      <div class="box-title">初心寵物算檔模擬</div>
+      <div class="row">
+        <label>寵物資料🔍</label>
+        <input type="text" id="searchBox" style="flex:1" placeholder="輸入寵物名稱或編號">
+        <button id="btnUpdate" class="btn-orange">⟳ 更新寵物資料</button>
+      </div>
+      <div class="row">
+        <span id="selectedPetLabel">尚未選取寵物</span>
+        <span class="info-row">
+          <span id="infoRace">種族：-</span>
+          <span id="infoAttr">屬性：-</span>
+          <span id="infoSkillSlot">技能欄：-格</span>
+          <span id="infoBprate">能力倍率：-</span>
+        </span>
+      </div>
+      <div class="row">
+        <label>當前等級：</label><input type="number" id="calcLvl" value="1" min="1" style="width:70px">
+        <button id="btnCalc" class="btn-primary" style="width:auto">計算 (算檔)</button>
+        <button id="btnOpenSimPanel" style="width:auto;background:#a9d6e5;color:#2b3a3a">模擬成長</button>
+        <span id="statusMsg"></span>
+      </div>
+      <div class="row">
+        <label style="color:#2e7d32">升級沒有點的數量（剩餘點數，尚未分配的等級點數，沒有就留0）：</label>
+        <input type="number" id="leftoverPoints" value="0" min="0" style="width:70px">
+      </div>
+      <div class="stat-cols row">
+        <div>
+          <label>當前能力（血 魔 攻 防 敏，例：3346 2931 253 247 298）：</label>
+          <input type="text" id="curStats">
+        </div>
+        <div>
+          <label class="lvl1-label">一等能力(選填，血 魔 攻 防 敏)：</label>
+          <input type="text" id="lvl1Stats">
+        </div>
+      </div>
+      <div class="mode-row">
+        <button class="mode-btn active" data-mode="智" data-map="">智</button>
+        <button class="mode-btn" data-mode="無" data-map="完全不點">無</button>
+        <button class="mode-btn" data-mode="體" data-map="統加體力">體</button>
+        <button class="mode-btn" data-mode="力" data-map="統加力量">力</button>
+        <button class="mode-btn" data-mode="防" data-map="統加防禦">防</button>
+        <button class="mode-btn" data-mode="敏" data-map="統加敏捷">敏</button>
+        <button class="mode-btn" data-mode="魔" data-map="統加魔法">魔</button>
+        <span class="hint">升級點法（智=允許混點反算；無=假設升級都沒點任何主能力；其餘=假設只點單一項）</span>
+      </div>
+    </div>
+
+    <div class="box">
+      <div id="petListWrap">
+        <table class="pet-table" id="petTable">
+          <thead>
+            <tr>
+              <th data-col="id">ID</th>
+              <th data-col="name" class="name-col">寵物名稱</th>
+              <th data-col="race">種族</th>
+              <th data-col="attr">屬性</th>
+              <th data-col="hp">體力檔</th>
+              <th data-col="atk">力量檔</th>
+              <th data-col="def">防禦檔</th>
+              <th data-col="agi">敏捷檔</th>
+              <th data-col="mp">魔法檔</th>
+              <th data-col="skillSlot">技格</th>
+              <th data-col="skills" class="skill-col">技能</th>
+            </tr>
+          </thead>
+          <tbody id="petTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="result-grid">
+      <div class="result-box">
+        <h4>① 必掉檔次（僅一等寵物顯示）</h4>
+        <div class="inner" id="panel1"></div>
+      </div>
+      <div class="result-box">
+        <h4>② 掉檔組合機率 Top5</h4>
+        <div class="inner" id="panel2"></div>
+      </div>
+      <div class="result-box">
+        <h4>③ 單項掉檔機率（0~4檔二次分析）</h4>
+        <div class="inner" id="panel3"></div>
+      </div>
+      <div class="result-box">
+        <h4>④ 升級加點分布（非一等寵物顯示）</h4>
+        <div class="inner" id="panel4"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="simWindows"></div>
+<div id="toast"></div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div id="confirmMsg"></div>
+    <div class="actions">
+      <button id="confirmNo">取消</button>
+      <button id="confirmYes" class="btn-primary" style="width:auto">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase：用來存放「大家共用」的寵物資料庫，設定方式見 README.md -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="calc.js"></script>
+<script src="pet_data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
