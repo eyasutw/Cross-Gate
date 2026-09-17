@@ -629,7 +629,7 @@ const PET_LIST_URL = "https://cg-originmood-dc.github.io/%E5%AF%B5%E7%89%A9%E6%B
 const NEWS_LIST_URL = "https://cg.originmood.com/news.html";
 // 自建的 Cloudflare Worker 代理（選填，見 cloudflare-worker-proxy.js 與 README.md）。
 // 有填的話會第一個優先嘗試，比依賴別人的免費公開代理穩定很多。
-const OWN_WORKER_PROXY_URL = ""; // 例如: "https://mowuz-proxy.your-name.workers.dev"
+const OWN_WORKER_PROXY_URL = "https://mowuz-proxy.eyasutw.workers.dev/"; // 例如: "https://mowuz-proxy.your-name.workers.dev"
 
 const CORS_PROXIES = [
   ...(OWN_WORKER_PROXY_URL ? [(u) => `${OWN_WORKER_PROXY_URL}/?url=${encodeURIComponent(u)}`] : []),
