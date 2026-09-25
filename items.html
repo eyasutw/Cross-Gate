@@ -37,7 +37,7 @@
     min-height:100vh;
   }
 
-  .wrap{ max-width: 1400px; margin: 0 auto; padding: 40px 24px 80px; }
+  .wrap{ width: 100%; margin: 0; padding: 40px 24px 80px; }
 
   /* ---- Hero ---- */
   header.hero{
@@ -217,6 +217,96 @@
   ::-webkit-scrollbar-track{ background: var(--panel); }
   ::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 6px; }
   ::-webkit-scrollbar-thumb:hover{ background: var(--gold-soft); }
+
+  /* ---- 進階搜尋按鈕 / 面板 ---- */
+  .adv-search-btn{
+    font-family: "Noto Sans TC", sans-serif;
+    font-size: 13px;
+    background: var(--panel);
+    border: 1px solid var(--gold-soft);
+    color: var(--gold);
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .adv-search-btn:hover{ background:#2a3260; }
+  .adv-search-btn.active{
+    background: linear-gradient(180deg, #d8b869, var(--gold-soft));
+    border-color: var(--gold-soft);
+    color: #1a1508;
+    font-weight: 700;
+  }
+  .controls-label{ color: var(--text-dim); font-size: 13px; white-space: nowrap; }
+  .adv-panel{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px 14px;
+  }
+  .adv-panel .adv-field{ display:flex; flex-direction:column; gap:4px; }
+  .adv-panel label{ font-size:12px; color: var(--text-dim); }
+  .adv-panel input{
+    background: var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding: 6px 8px; color: var(--text); font-size:13px; font-family:"JetBrains Mono", monospace;
+    outline:none;
+  }
+  .adv-panel input:focus{ border-color: var(--gold-soft); }
+  .adv-panel-actions{
+    grid-column: 1 / -1; display:flex; gap:10px; margin-top:4px;
+  }
+  .adv-panel-actions button{
+    font-family: "Noto Sans TC", sans-serif; font-size:13px; padding:8px 16px;
+    border-radius: 999px; border:1px solid var(--gold-soft); cursor:pointer;
+  }
+  #btnAdvApply{ background: linear-gradient(180deg, #d8b869, var(--gold-soft)); color:#1a1508; font-weight:700; }
+  #btnAdvClear{ background: var(--panel-2); color: var(--text-dim); }
+  .adv-summary{
+    font-size:12px; color: var(--gold); margin: -6px 0 14px;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  .adv-summary button{
+    background:none; border:1px solid var(--line); color:var(--text-dim);
+    border-radius:999px; padding:2px 10px; cursor:pointer; font-size:11px;
+  }
+
+  /* ---- 資料同步 ---- */
+  .sync-row{ background: rgba(255,255,255,0.02); border:1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+  .sync-btn{
+    font-family:"Noto Sans TC", sans-serif; font-size:12.5px;
+    background: var(--panel-2); border:1px solid var(--line); color:var(--text);
+    padding:8px 14px; border-radius:999px; cursor:pointer;
+  }
+  .sync-btn:hover{ border-color: var(--gold-soft); }
+  .sync-file{ font-size:12px; color: var(--text-dim); max-width:180px; }
+  .controls-hint{ font-size:12px; color: var(--text-dim); }
+
+  /* ---- 道具名稱連結 / 圖片放大 ---- */
+  .item-name-link{
+    color:#7fc4ff; text-decoration:underline; cursor:pointer; background:none; border:none;
+    font: inherit; padding:0; text-align:left;
+  }
+  .item-name-link:hover{ color:#a9dcff; }
+  .img-modal-overlay{
+    position: fixed; inset:0; background: rgba(10,12,24,0.72);
+    display:flex; align-items:center; justify-content:center; z-index: 50;
+  }
+  .img-modal-box{
+    background: var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 20px; max-width: 90vw; max-height: 85vh; overflow:auto; position:relative;
+    min-width: 260px; text-align:center;
+  }
+  .img-modal-close{
+    position:absolute; top:10px; right:10px; background:#8a2a2a; color:#fff; border:none;
+    border-radius:6px; padding:4px 10px; cursor:pointer;
+  }
+  .img-modal-title{ font-weight:700; color: var(--gold); margin-bottom:12px; font-size:16px; }
+  .img-modal-body img{ max-width: 70vw; max-height: 65vh; border-radius:8px; }
+  .img-modal-body{ color: var(--text-dim); font-size:13px; padding: 20px 10px; }
 </style>
 </head>
 <body>
@@ -226,7 +316,6 @@
     <div>
       <div class="hero-eyebrow">永恆初心 · 飾品道具資料庫</div>
       <h1 class="title">飾品道具查詢表</h1>
-      <p class="subtitle">整合「特殊飾品頭飾」與「特惠禮盒頭飾」共 174 筆道具數值，支援搜尋與點欄位排序，可依分類篩選。</p>
     </div>
     <div class="stat-pill">目前收錄 <b id="countNum">0</b> 件道具</div>
   </header>
@@ -234,9 +323,24 @@
   <div class="controls">
     <div class="search-box">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="searchInput" type="text" placeholder="搜尋名稱、種類、特殊能力…">
+      <input id="searchInput" type="text" placeholder="輸入道具關鍵字搜尋（名稱、分類、原始說明都可以搜）">
     </div>
+    <button id="btnAdvancedSearch" class="adv-search-btn">🔎 更多搜尋</button>
     <div class="filter-tabs" id="filterTabs"></div>
+  </div>
+  <div class="controls" id="slotTabsRow">
+    <span class="controls-label">部位：</span>
+    <div class="filter-tabs" id="slotTabs"></div>
+  </div>
+  <div id="advPanel" class="adv-panel" style="display:none"></div>
+  <div id="advSummary" class="adv-summary" style="display:none"></div>
+
+  <div class="controls sync-row">
+    <span class="controls-label">資料同步：</span>
+    <button id="btnExportItems" class="sync-btn">⬇ 匯出目前資料 (JSON)</button>
+    <input type="file" id="itemImportFile" accept="application/json,.json" class="sync-file">
+    <button id="btnImportItems" class="sync-btn">⬆ 匯入並套用</button>
+    <span class="controls-hint" id="itemSyncHint"></span>
   </div>
 
   <div class="table-scroll">
@@ -248,11 +352,14 @@
     </table>
   </div>
 
-  <p class="footnote">
-    目前收錄 <code id="itemCountFootnote"></code> 筆道具（特殊飾品頭飾 149 筆＋特惠禮盒頭飾 25 筆）。資料來源：<a href="https://cg-originmood-dc.github.io/飾品道具/特殊飾品頭飾/特殊飾品頭飾" target="_blank" style="color:var(--gold)">cg-originmood-dc.github.io</a>（玩家整理自 Goodluck 的資料庫）。<br>
-    數值多由文字說明自動解析，範圍值（如「必殺+10~20」）採用上限值；如需核對原始描述，可看每列最右側「原始說明」欄位。「王寵/祕寶飾品」分類來源目前只有圖片沒有文字數據，尚未收錄，之後有文字版資料可以再補上。
-  </p>
+</div>
 
+<div id="imgModalOverlay" class="img-modal-overlay" style="display:none">
+  <div class="img-modal-box">
+    <button id="imgModalClose" class="img-modal-close">✕</button>
+    <div class="img-modal-title" id="imgModalTitle"></div>
+    <div class="img-modal-body" id="imgModalBody"></div>
+  </div>
 </div>
 
 <script>
@@ -279,6 +386,8 @@
     { key: "forget",   label: "遠忘",     sortable: true, type: "num" },
     { key: "drunk",    label: "抗酒醉",   sortable: true, type: "num" },
     { key: "charm",    label: "魅力",     sortable: true, type: "num" },
+    { key: "attribute", label: "屬性",    sortable: true, type: "text" },
+    { key: "skillReduction", label: "技能減免", sortable: true, type: "num" },
     { key: "earth",    label: "地屬性",   sortable: true, type: "num" },
     { key: "water",    label: "水屬性",   sortable: true, type: "num" },
     { key: "fire",     label: "火屬性",   sortable: true, type: "num" },
@@ -293,7 +402,7 @@
   // 含「特殊飾品頭飾」主表 149 筆 + 「特惠禮盒頭飾」25 筆，共 174 筆。
   // 數值多數為文字說明直接解析而來；若原文為範圍值（例如 100~170），採用上限值；完整原始說明保留在「原始說明」欄位，可核對。
   // 「王寵/祕寶飾品」分類目前來源僅有圖片、無文字數值，尚未收錄。
-  const ITEMS = [
+  const BUILTIN_ITEMS = [
     { category:"特殊飾品頭飾", name:"輪迴之眼頭飾", level:"1", durability:"200", hp:400, mp:400, atk:170, def:0, agi:0, crit:20, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"生命+（300~400），魔力+（300~400），攻擊+（100~170），必殺+（10~20），水屬性+1" },
     { category:"特殊飾品頭飾", name:"鬼瞳頭飾", level:"1", durability:"200", hp:0, mp:200, atk:30, def:0, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:1, fire:0, wind:0, effect:"魔力+200，攻擊+30，必殺+10，水屬性+1" },
     { category:"特殊飾品頭飾", name:"天使之翼頭飾", level:"1", durability:"200", hp:400, mp:0, atk:0, def:0, agi:60, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:150, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+（300-400），精神+（100~150），敏捷+（30~60），可大幅提升偷襲魔族的概率。" },
@@ -470,20 +579,87 @@
     { category:"特惠禮盒頭飾", name:"彩帶派對帽", level:"1", durability:"200", hp:150, mp:50, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 回復+30、生命+150、魔力+50" },
   ];
 
+  // ---- 小工具 ----
+  function escapeHtml(str){
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  // 依名稱粗略判斷「部位」：項鍊/戒指/手鍊/護符/徽章/吊墜 等歸類為護身符，其餘（帽子、頭飾、頭套、耳朵…）視為頭飾。
+  function classifySlot(name){
+    if (/戒指|戒|項鍊|手鍊|手環|護符|徽章|吊墜|墜飾|符咒|護身符/.test(name)) return "護身符";
+    return "頭飾";
+  }
+
+  function attributeText(item){
+    const parts = [];
+    if (item.earth) parts.push("地+" + item.earth);
+    if (item.water) parts.push("水+" + item.water);
+    if (item.fire)  parts.push("火+" + item.fire);
+    if (item.wind)  parts.push("風+" + item.wind);
+    return parts.join("、");
+  }
+
+  // 補上每筆道具的衍生欄位（部位、屬性文字），匯入新資料時也會重新計算一次。
+  function enrichItems(list){
+    return list.map(item => Object.assign({}, item, {
+      slot: item.slot || classifySlot(item.name || ""),
+      attribute: attributeText(item),
+    }));
+  }
+
+  // ---- 本機快取：匯入的資料存在瀏覽器裡，重新整理網頁也不會不見 ----
+  const ITEMS_CACHE_KEY = "cg_items_cache_v1";
+  function saveItemsToCache(list){
+    try { localStorage.setItem(ITEMS_CACHE_KEY, JSON.stringify(list)); } catch (e) { console.error("寫入道具本機快取失敗：", e); }
+  }
+  function loadItemsFromCache(){
+    try {
+      const raw = localStorage.getItem(ITEMS_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length ? parsed : null;
+    } catch (e) { console.error("讀取道具本機快取失敗：", e); return null; }
+  }
+
+  const cachedItems = loadItemsFromCache();
+  let ITEMS = enrichItems(cachedItems || BUILTIN_ITEMS);
+  const usedCache = !!cachedItems;
+
+  // 可用來做「更多搜尋」數字門檻篩選的欄位（純數字欄位才適用）
+  const ADV_KEYS = COLUMNS.filter(c => c.type === "num").map(c => c.key);
+
   // ---- 狀態 ----
   let sortKey = "name";
   let sortDir = "asc";
   let activeCategory = "全部";
+  let activeSlot = "全部";
   let searchTerm = "";
+  let advFilters = {};   // { hp: 100, mp: 50, ... } 表示「該欄位 >= 數值」
+  let currentRows = [];  // 目前畫面上顯示的資料（篩選/排序後），給名稱連結點擊時對照用
 
   const headerRow = document.getElementById("headerRow");
   const tableBody = document.getElementById("tableBody");
   const filterTabs = document.getElementById("filterTabs");
+  const slotTabs = document.getElementById("slotTabs");
   const searchInput = document.getElementById("searchInput");
   const countNum = document.getElementById("countNum");
-  const itemCountFootnote = document.getElementById("itemCountFootnote");
+  const btnAdvancedSearch = document.getElementById("btnAdvancedSearch");
+  const advPanel = document.getElementById("advPanel");
+  const advSummary = document.getElementById("advSummary");
+  const btnExportItems = document.getElementById("btnExportItems");
+  const itemImportFile = document.getElementById("itemImportFile");
+  const btnImportItems = document.getElementById("btnImportItems");
+  const itemSyncHint = document.getElementById("itemSyncHint");
+  const imgModalOverlay = document.getElementById("imgModalOverlay");
+  const imgModalTitle = document.getElementById("imgModalTitle");
+  const imgModalBody = document.getElementById("imgModalBody");
+  const imgModalClose = document.getElementById("imgModalClose");
 
-  itemCountFootnote.textContent = ITEMS.length + " 筆";
+  itemSyncHint.textContent = usedCache
+    ? `已讀取上次匯入的本機資料，共 ${ITEMS.length} 筆（只存在你目前這個瀏覽器裡）。`
+    : "資料異動只會存在你目前這個瀏覽器（本機快取）。要分享給別人的話，把「匯出目前資料」的 JSON 檔傳給對方，請對方用「匯入並套用」載入。";
 
   function renderHeader(){
     headerRow.innerHTML = "";
@@ -521,13 +697,148 @@
     });
   }
 
-  function cellHTML(col, item){
+  function renderSlotTabs(){
+    const slots = ["全部", "頭飾", "護身符"];
+    slotTabs.innerHTML = "";
+    slots.forEach(slot => {
+      const btn = document.createElement("button");
+      btn.textContent = slot;
+      if (slot === activeSlot) btn.classList.add("active");
+      btn.addEventListener("click", () => {
+        activeSlot = slot;
+        renderAll();
+      });
+      slotTabs.appendChild(btn);
+    });
+  }
+
+  // ---- 更多搜尋（數字門檻，可複數條件同時套用） ----
+  const advInputs = {};
+  function buildAdvPanel(){
+    advPanel.innerHTML = "";
+    ADV_KEYS.forEach(key => {
+      const col = COLUMNS.find(c => c.key === key);
+      const field = document.createElement("div");
+      field.className = "adv-field";
+      const label = document.createElement("label");
+      label.textContent = col.label + " ≥";
+      const input = document.createElement("input");
+      input.type = "number";
+      input.placeholder = "不限";
+      input.dataset.key = key;
+      advInputs[key] = input;
+      field.appendChild(label);
+      field.appendChild(input);
+      advPanel.appendChild(field);
+    });
+    const actions = document.createElement("div");
+    actions.className = "adv-panel-actions";
+    const applyBtn = document.createElement("button");
+    applyBtn.id = "btnAdvApply";
+    applyBtn.textContent = "套用搜尋";
+    applyBtn.addEventListener("click", applyAdvFilters);
+    const clearBtn = document.createElement("button");
+    clearBtn.id = "btnAdvClear";
+    clearBtn.textContent = "清除全部";
+    clearBtn.addEventListener("click", clearAdvFilters);
+    actions.appendChild(applyBtn);
+    actions.appendChild(clearBtn);
+    advPanel.appendChild(actions);
+  }
+
+  function applyAdvFilters(){
+    advFilters = {};
+    ADV_KEYS.forEach(key => {
+      const raw = advInputs[key].value.trim();
+      if (raw !== "" && !isNaN(Number(raw))) {
+        advFilters[key] = Number(raw);
+      }
+    });
+    renderSummary();
+    renderBody();
+  }
+
+  function clearAdvFilters(){
+    advFilters = {};
+    ADV_KEYS.forEach(key => { if (advInputs[key]) advInputs[key].value = ""; });
+    renderSummary();
+    renderBody();
+  }
+
+  function renderSummary(){
+    const keys = Object.keys(advFilters);
+    if (!keys.length) {
+      advSummary.style.display = "none";
+      advSummary.innerHTML = "";
+      return;
+    }
+    advSummary.style.display = "flex";
+    advSummary.innerHTML = "目前套用：";
+    keys.forEach(key => {
+      const col = COLUMNS.find(c => c.key === key);
+      const chip = document.createElement("button");
+      chip.textContent = `${col.label} ≥ ${advFilters[key]} ✕`;
+      chip.addEventListener("click", () => {
+        delete advFilters[key];
+        if (advInputs[key]) advInputs[key].value = "";
+        renderSummary();
+        renderBody();
+      });
+      advSummary.appendChild(chip);
+    });
+    const clearAllBtn = document.createElement("button");
+    clearAllBtn.textContent = "清除全部 ✕";
+    clearAllBtn.addEventListener("click", clearAdvFilters);
+    advSummary.appendChild(clearAllBtn);
+  }
+
+  btnAdvancedSearch.addEventListener("click", () => {
+    const showing = advPanel.style.display !== "none";
+    if (showing) {
+      advPanel.style.display = "none";
+      btnAdvancedSearch.classList.remove("active");
+    } else {
+      if (!advPanel.dataset.built) {
+        buildAdvPanel();
+        advPanel.dataset.built = "1";
+      }
+      advPanel.style.display = "grid";
+      btnAdvancedSearch.classList.add("active");
+    }
+  });
+
+  // ---- 名稱連結 → 放大圖片視窗 ----
+  function openImageModal(item){
+    imgModalTitle.textContent = item.name;
+    if (item.icon) {
+      imgModalBody.innerHTML = `<img src="${escapeHtml(item.icon)}" alt="${escapeHtml(item.name)}">`;
+    } else {
+      imgModalBody.innerHTML = `<div>目前這個道具還沒有收錄圖片。<br>之後補上圖片來源時，只要在資料裡加上 <code style="background:#232b52;padding:1px 6px;border-radius:4px">icon</code>（圖片網址）欄位，這裡就會自動顯示圖示。</div>`;
+    }
+    imgModalOverlay.style.display = "flex";
+  }
+  imgModalClose.addEventListener("click", () => { imgModalOverlay.style.display = "none"; });
+  imgModalOverlay.addEventListener("click", (e) => {
+    if (e.target === imgModalOverlay) imgModalOverlay.style.display = "none";
+  });
+  tableBody.addEventListener("click", (e) => {
+    const btn = e.target.closest(".item-name-link");
+    if (!btn) return;
+    const idx = Number(btn.dataset.idx);
+    const item = currentRows[idx];
+    if (item) openImageModal(item);
+  });
+
+  function cellHTML(col, item, idx){
+    if (col.key === "name") {
+      return `<button type="button" class="item-name-link" data-idx="${idx}">${escapeHtml(item.name)}</button>`;
+    }
     const val = item[col.key];
     if (col.type === "num") {
       return val ? val : `<span style="color:#565f92">—</span>`;
     }
     if (col.type === "text") {
-      return val ? val : `<span style="color:#565f92">—</span>`;
+      return val ? escapeHtml(val) : `<span style="color:#565f92">—</span>`;
     }
     return val;
   }
@@ -535,28 +846,33 @@
   function renderBody(){
     let rows = ITEMS.filter(item => {
       const matchCat = activeCategory === "全部" || item.category === activeCategory;
+      const matchSlot = activeSlot === "全部" || item.slot === activeSlot;
       const haystack = (item.name + " " + item.category + " " + item.effect).toLowerCase();
       const matchSearch = haystack.includes(searchTerm.toLowerCase());
-      return matchCat && matchSearch;
+      const matchAdv = Object.keys(advFilters).every(key => (Number(item[key]) || 0) >= advFilters[key]);
+      return matchCat && matchSlot && matchSearch && matchAdv;
     });
 
     rows.sort((a, b) => {
       let av = a[sortKey], bv = b[sortKey];
-      if (typeof av === "string" && typeof bv === "string") {
+      if (typeof av === "string" || typeof bv === "string") {
+        av = av == null ? "" : String(av);
+        bv = bv == null ? "" : String(bv);
         return sortDir === "asc" ? av.localeCompare(bv, "zh-Hant") : bv.localeCompare(av, "zh-Hant");
       }
       return sortDir === "asc" ? av - bv : bv - av;
     });
 
+    currentRows = rows;
     tableBody.innerHTML = "";
     if (rows.length === 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td colspan="${COLUMNS.length}" class="empty-state">找不到符合的道具，換個關鍵字試試看</td>`;
+      tr.innerHTML = `<td colspan="${COLUMNS.length}" class="empty-state">找不到符合的道具，換個關鍵字或調整「更多搜尋」條件試試看</td>`;
       tableBody.appendChild(tr);
     } else {
-      rows.forEach(item => {
+      rows.forEach((item, idx) => {
         const tr = document.createElement("tr");
-        tr.innerHTML = COLUMNS.map(col => `<td>${cellHTML(col, item)}</td>`).join("");
+        tr.innerHTML = COLUMNS.map(col => `<td>${cellHTML(col, item, idx)}</td>`).join("");
         tableBody.appendChild(tr);
       });
     }
@@ -566,12 +882,59 @@
   function renderAll(){
     renderHeader();
     renderTabs();
+    renderSlotTabs();
     renderBody();
   }
 
   searchInput.addEventListener("input", (e) => {
     searchTerm = e.target.value;
     renderBody();
+  });
+
+  // ---- 資料同步：匯出 / 匯入（存在瀏覽器本機，重新整理網頁不會不見） ----
+  function downloadJSON(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  btnExportItems.addEventListener("click", () => {
+    downloadJSON(`cross-gate-items-${new Date().toISOString().slice(0, 10)}.json`, ITEMS);
+    itemSyncHint.textContent = `已匯出目前 ${ITEMS.length} 筆道具資料，可以把這個 JSON 檔案分享給別人匯入。`;
+  });
+
+  btnImportItems.addEventListener("click", () => {
+    const file = itemImportFile.files && itemImportFile.files[0];
+    if (!file) { itemSyncHint.textContent = "請先選擇要匯入的 JSON 檔案。"; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try {
+        parsed = JSON.parse(reader.result);
+      } catch (err) {
+        itemSyncHint.textContent = "匯入失敗：檔案不是合法的 JSON 格式（" + err.message + "）。";
+        return;
+      }
+      if (!Array.isArray(parsed) || !parsed.length || typeof parsed[0] !== "object") {
+        itemSyncHint.textContent = "匯入失敗：內容格式不符合預期（需要是道具資料陣列，跟「匯出目前資料」產生的格式一樣）。";
+        return;
+      }
+      ITEMS = enrichItems(parsed);
+      saveItemsToCache(ITEMS);
+      activeCategory = "全部"; activeSlot = "全部"; searchTerm = ""; advFilters = {};
+      searchInput.value = "";
+      advPanel.dataset.built = "";
+      advPanel.style.display = "none";
+      btnAdvancedSearch.classList.remove("active");
+      renderAll();
+      itemImportFile.value = "";
+      itemSyncHint.textContent = `已匯入 ${ITEMS.length} 筆道具資料並套用到目前畫面（已存到本機快取）。`;
+    };
+    reader.onerror = () => { itemSyncHint.textContent = "讀取檔案失敗，請重新選擇檔案。"; };
+    reader.readAsText(file, "utf-8");
   });
 
   renderAll();
