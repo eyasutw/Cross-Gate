@@ -13,6 +13,30 @@ let sortState = {};
 let simWindows = [];
 let windowOffset = 0;
 
+// ── 本機快取：沒有設定 Supabase 時，用瀏覽器 localStorage 記住上次更新的寵物資料，
+// 避免「按了更新、關掉網站重開又變回舊資料」的狀況。 ─────────────────────
+const LOCAL_PET_CACHE_KEY = "cg_pet_data_cache_v1";
+
+function savePetsToLocalCache(petList) {
+  try {
+    localStorage.setItem(LOCAL_PET_CACHE_KEY, JSON.stringify(petList));
+  } catch (err) {
+    console.error("寫入本機寵物資料快取失敗：", err);
+  }
+}
+
+function loadPetsFromLocalCache() {
+  try {
+    const raw = localStorage.getItem(LOCAL_PET_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length ? parsed : null;
+  } catch (err) {
+    console.error("讀取本機寵物資料快取失敗：", err);
+    return null;
+  }
+}
+
 // ── Supabase：大家共用的寵物資料庫（選填，見 supabase-config.js） ─────────
 let supabaseClient = null;
 if (typeof SUPABASE_URL !== "undefined" && SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== "undefined") {
@@ -487,14 +511,15 @@ function wouldBurst(state, i, delta) {
 }
 
 function openSimWindow(state) {
+  // 呈現在畫面正中間；第一個視窗完全置中，之後多開的視窗依序小幅錯開，避免完全疊在一起
+  const cascade = (windowOffset % 8) * 24;
   windowOffset++;
   const container = document.getElementById("simWindows");
   const el = document.createElement("div");
   el.className = "sim-window";
-  // 直接停靠在畫面右側，往下依序錯開，避免疊在版面中間蓋住寵物清單
-  el.style.right = "16px";
-  el.style.top = (16 + (windowOffset % 8) * 28) + "px";
-  el.style.left = "auto";
+  el.style.left = "50%";
+  el.style.top = "50%";
+  el.style.transform = `translate(calc(-50% + ${cascade}px), calc(-50% + ${cascade}px))`;
 
   el.innerHTML = `
     <div class="titlebar">
@@ -507,7 +532,6 @@ function openSimWindow(state) {
       <div class="line2" id="mpLine"></div>
       <div style="color:#f2d98d;margin-top:6px">基本數值（可用 -/+ 手動微調配點）</div>
       <div class="sim-grid" id="simGrid"></div>
-      <div class="sub" id="bpLine"></div>
       <div class="sub">技能欄：${state.skillSlot}格　種族：${escapeHtml(state.race)}　屬性：${escapeHtml(state.attr)}</div>
       <div class="skills-line">技能：${escapeHtml(state.skills)}</div>
     </div>`;
@@ -533,7 +557,6 @@ function openSimWindow(state) {
     const remain = state.manualPoints - state.alloc.reduce((a, v) => a + v, 0);
     el.querySelector("#hpLine").textContent = `生命 ${s.hp.toFixed(2)}`;
     el.querySelector("#mpLine").textContent = `魔力 ${s.mp.toFixed(2)}`;
-    el.querySelector("#bpLine").textContent = "BP：" + s.bp.map((v) => v.toFixed(2)).join(" ");
 
     let html = `<div class="remain">剩餘點數 ${remain}</div>`;
     for (let i = 0; i < 5; i++) {
@@ -610,9 +633,14 @@ function makeDraggable(el, handle) {
   let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
   handle.addEventListener("mousedown", (e) => {
     dragging = true; sx = e.clientX; sy = e.clientY;
-    ox = el.offsetLeft; oy = el.offsetTop;
-    el.style.right = "auto";  // 開始拖曳後改用 left 定位，避免跟原本的 right 定位互相打架
+    // 視窗預設用 left/top:50% + transform 置中，開始拖曳時先換算成實際像素位置，
+    // 並清掉 transform / right，避免定位互相打架或拖曳瞬間跳動。
+    const rect = el.getBoundingClientRect();
+    ox = rect.left; oy = rect.top;
+    el.style.transform = "none";
+    el.style.right = "auto";
     el.style.left = ox + "px";
+    el.style.top = oy + "px";
     el.style.zIndex = String(++makeDraggable._z || 20);
     e.preventDefault();
   });
@@ -796,6 +824,7 @@ document.getElementById("btnUpdate").addEventListener("click", async () => {
       newPets = newRows.concat(oldRows);
     }
     pets = newPets;
+    savePetsToLocalCache(pets); // 存到本機快取，重新整理/關掉網站再打開時才不會又變回舊資料
     renderPetList(document.getElementById("searchBox").value);
     document.getElementById("statusMsg").textContent = `更新完成，共 ${pets.length} 筆寵物資料`;
 
@@ -822,6 +851,114 @@ document.getElementById("btnUpdate").addEventListener("click", async () => {
   }
 });
 
+// ── 手動同步（匯出 / 匯入 / 上傳到共用資料庫）──────────────────────────
+// 給不想依賴不穩定跨域代理的使用者：可以自己把資料整理成 JSON 檔案匯入，
+// 或直接把目前畫面上的資料上傳到 Supabase，其他人打開網站時就能看到。
+function downloadJSON(filename, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function updateSyncHint() {
+  const hint = document.getElementById("syncHint");
+  const pushBtn = document.getElementById("btnPushSupabase");
+  const pullBtn = document.getElementById("btnPullSupabase");
+  if (supabaseClient) {
+    hint.textContent = "已設定共用資料庫（Supabase）：按「上傳到共用資料庫」會把目前畫面上的資料覆蓋雲端資料，其他人打開網站也會看到；按「重新讀取共用資料庫」可以拉回雲端目前的內容。";
+    pushBtn.disabled = false;
+    pullBtn.disabled = false;
+  } else {
+    hint.textContent = "尚未設定共用資料庫（Supabase），匯入/匯出只會影響你自己的瀏覽器。設定方式見 README.md「Supabase 設定步驟」。";
+    pushBtn.disabled = true;
+    pullBtn.disabled = true;
+  }
+}
+
+document.getElementById("btnExportPets").addEventListener("click", () => {
+  downloadJSON(`cross-gate-pets-${new Date().toISOString().slice(0, 10)}.json`, pets);
+  toast(`已匯出目前 ${pets.length} 筆寵物資料，可以把這個 JSON 檔案分享給要上傳共用資料庫的人。`);
+});
+
+document.getElementById("btnImportPets").addEventListener("click", () => {
+  const input = document.getElementById("importFileInput");
+  const file = input.files && input.files[0];
+  if (!file) { toast("請先選擇要匯入的 JSON 檔案。"); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    let parsed;
+    try {
+      parsed = JSON.parse(reader.result);
+    } catch (err) {
+      toast("匯入失敗：檔案不是合法的 JSON 格式。\n" + err.message, 6000);
+      return;
+    }
+    if (!Array.isArray(parsed) || !parsed.length || !Array.isArray(parsed[0])) {
+      toast("匯入失敗：內容格式不符合預期（需要是寵物資料陣列，跟「匯出目前資料」產生的格式一樣）。", 6000);
+      return;
+    }
+    pets = parsed;
+    savePetsToLocalCache(pets);
+    renderPetList(document.getElementById("searchBox").value);
+    input.value = "";
+    toast(`已匯入 ${pets.length} 筆寵物資料並套用到目前畫面（已存到本機快取）。\n如果要同步給其他人，請再按「上傳到共用資料庫」。`, 6000);
+  };
+  reader.onerror = () => toast("讀取檔案失敗，請重新選擇檔案。");
+  reader.readAsText(file, "utf-8");
+});
+
+document.getElementById("btnPushSupabase").addEventListener("click", async () => {
+  if (!supabaseClient) {
+    toast("尚未設定共用資料庫（Supabase），請先依照 README.md「Supabase 設定步驟」設定 supabase-config.js。", 6000);
+    return;
+  }
+  const ok = await confirmDialog(
+    `即將把目前畫面上的 ${pets.length} 筆寵物資料上傳到共用資料庫，覆蓋雲端現有的資料，\n` +
+    "其他人重新打開網站時也會看到這份資料。\n\n確定要上傳嗎？");
+  if (!ok) return;
+  document.getElementById("statusMsg").textContent = "上傳中…";
+  try {
+    const r = await pushPetsToSupabase(pets);
+    document.getElementById("statusMsg").textContent = `已上傳，共 ${pets.length} 筆資料`;
+    toast(`已成功上傳 ${r.count != null ? r.count : pets.length} 筆寵物資料到共用資料庫，其他人打開網站就能看到。`);
+  } catch (err) {
+    document.getElementById("statusMsg").textContent = "上傳失敗";
+    toast("上傳到共用資料庫失敗：" + err.message, 8000);
+  }
+});
+
+document.getElementById("btnPullSupabase").addEventListener("click", async () => {
+  if (!supabaseClient) {
+    toast("尚未設定共用資料庫（Supabase），請先依照 README.md「Supabase 設定步驟」設定 supabase-config.js。", 6000);
+    return;
+  }
+  document.getElementById("statusMsg").textContent = "正在讀取共用資料庫…";
+  try {
+    const cloudPets = await loadPetsFromSupabase();
+    if (cloudPets) {
+      pets = cloudPets;
+      savePetsToLocalCache(pets);
+      renderPetList(document.getElementById("searchBox").value);
+      document.getElementById("statusMsg").textContent = `已讀取共用資料庫，共 ${pets.length} 筆寵物資料`;
+      toast(`已從共用資料庫讀取最新的 ${pets.length} 筆寵物資料。`);
+    } else {
+      document.getElementById("statusMsg").textContent = "共用資料庫目前是空的";
+      toast("共用資料庫目前是空的，還沒有人上傳過資料。");
+    }
+  } catch (err) {
+    document.getElementById("statusMsg").textContent = "讀取共用資料庫失敗";
+    toast("讀取共用資料庫失敗：" + err.message, 8000);
+  }
+});
+
+updateSyncHint();
+
 // ── 左側模擬面板收合/展開 ──────────────────────────────────
 function expandLeftPanel() {
   document.getElementById("leftExpanded").style.display = "block";
@@ -833,6 +970,15 @@ document.getElementById("btnCollapseLeft").addEventListener("click", collapseLef
 document.getElementById("btnOpenSimPanel").addEventListener("click", expandLeftPanel);
 
 // ── 初始化 ──────────────────────────────────────────────
+// 沒有設定共用資料庫時，優先用本機快取（上次按「更新寵物資料」抓回來的結果），
+// 不然每次重新整理都會被打回內建的舊資料。
+if (!supabaseClient) {
+  const cached = loadPetsFromLocalCache();
+  if (cached) {
+    pets = cached;
+    document.getElementById("statusMsg").textContent = `已讀取上次更新的本機資料，共 ${pets.length} 筆寵物資料`;
+  }
+}
 renderPetList("");
 if (supabaseClient) {
   document.getElementById("statusMsg").textContent = "正在讀取共用資料庫…";

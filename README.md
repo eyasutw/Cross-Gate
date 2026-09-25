@@ -27,6 +27,76 @@
 2. 進 repo 的 **Settings → Pages**，Source 選 `Deploy from a branch`，Branch 選 `main` / `/ (root)`
 3. 等 1-2 分鐘，打開 `https://你的帳號.github.io/repo名稱/` 就會看到左側選單的入口頁面
 
+## Supabase 設定步驟（讓大家看到同一份寵物資料，選填）
+
+預設狀態下，「更新寵物資料」抓回來的最新資料只會存在你自己的瀏覽器裡（`localStorage`），
+別人打開網站看到的還是內建的舊資料。如果想要「大家看到同一份資料」，需要自己申請一個
+免費的 Supabase 專案當共用資料庫，設定一次就好：
+
+1. 到 [supabase.com](https://supabase.com) 免費註冊，建立一個新專案（New Project）。
+2. 進到專案後，左側選單找 **SQL Editor**，貼上下面的 SQL 並執行一次，
+   會建立一張叫 `pets` 的資料表，並允許任何人讀取/寫入（因為這裡只是拿來放公開的寵物資料，
+   不涉及個人帳號隱私，所以直接開放讀寫最簡單）：
+
+   ```sql
+   create table pets (
+     id bigint generated always as identity primary key,
+     official_id integer,
+     name text unique not null,
+     race text,
+     hp numeric,
+     atk numeric,
+     def numeric,
+     agi numeric,
+     mp numeric,
+     bprate numeric,
+     skill_slot numeric,
+     attr text,
+     skills text,
+     source text,
+     updated_at timestamptz default now()
+   );
+
+   alter table pets enable row level security;
+
+   create policy "public can read pets" on pets
+     for select using (true);
+
+   create policy "public can insert pets" on pets
+     for insert with check (true);
+
+   create policy "public can update pets" on pets
+     for update using (true);
+   ```
+
+   （`name` 欄位有加 `unique`，是因為程式在上傳/更新時會用寵物名稱判斷是「新增」還是
+   「覆蓋既有資料」，一定要有這個限制上傳才不會出錯。）
+
+3. 左側選單找 **Settings → API**，會看到：
+   - **Project URL**（例如 `https://xxxxxxxxxxxx.supabase.co`）
+   - **anon public** 這組 API Key（一長串英數字）
+4. 打開 `supabase-config.js`，把這兩個值填進去：
+
+   ```js
+   const SUPABASE_URL = "https://xxxxxxxxxxxx.supabase.co";
+   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9......";
+   ```
+
+5. 存檔後重新上傳 `supabase-config.js` 到 GitHub repo（覆蓋原本空白的版本），
+   等 GitHub Pages 更新完，重新整理網站。
+
+設定完成後，畫面上「資料同步」那排按鈕才會真正動作：
+
+- **上傳到共用資料庫**：把你目前畫面上的寵物資料（不管是用「更新寵物資料」抓回來的、
+  還是自己匯入 JSON 檔案套用的）整批覆蓋到 Supabase，其他人打開網站就會看到這份資料。
+- **重新讀取共用資料庫**：手動把雲端目前的資料拉回來，不用重新整理整個網頁。
+- **匯出目前資料 (JSON)** / **匯入並套用**：不需要設定 Supabase 也能用，純粹是方便你在
+  不同電腦之間搬資料，或是先把資料整理好、確認沒問題後，再用「上傳到共用資料庫」正式同步
+  給大家（例如：管理者自己先手動核對、修正過某幾筆寵物資料，再一次上傳，而不是完全依賴
+  容易失敗的自動抓取）。
+
+沒有設定 Supabase 也完全不影響原本的功能，只是資料不會在不同人、不同瀏覽器之間同步。
+
 ## 之後如果想再加更多功能頁面
 
 1. 把新的頁面（例如 `xxx.html`）也上傳到同一個資料夾

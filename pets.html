@@ -26,6 +26,7 @@
     background: var(--bg); color: var(--dark); font-size: 14px;
   }
   button { font-family: inherit; cursor: pointer; border: none; border-radius: 4px; padding: 5px 10px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
   input, select { font-family: inherit; padding: 4px 6px; border: 1px solid #b8a888; border-radius: 3px; }
   .layout { display: flex; gap: 8px; padding: 8px; align-items: flex-start; }
   .left-panel { width: 360px; flex-shrink: 0; }
@@ -186,6 +187,15 @@
         <label>寵物資料🔍</label>
         <input type="text" id="searchBox" style="flex:1" placeholder="輸入寵物名稱或編號">
         <button id="btnUpdate" class="btn-orange">⟳ 更新寵物資料</button>
+      </div>
+      <div class="row" id="dataSyncRow" style="flex-wrap:wrap;gap:6px 10px;background:#00000008;border-radius:4px;padding:6px 8px">
+        <span style="font-weight:bold;color:#555">資料同步：</span>
+        <button id="btnExportPets" style="background:#ddd;color:#333">⬇ 匯出目前資料 (JSON)</button>
+        <input type="file" id="importFileInput" accept="application/json,.json" style="max-width:180px">
+        <button id="btnImportPets" style="background:#ddd;color:#333">⬆ 匯入並套用</button>
+        <button id="btnPushSupabase" style="background:#3f6d6d;color:#fff">☁ 上傳到共用資料庫</button>
+        <button id="btnPullSupabase" style="background:#ddd;color:#333">⟲ 重新讀取共用資料庫</button>
+        <span class="hint" id="syncHint" style="flex-basis:100%">尚未設定共用資料庫（Supabase），匯入/匯出只會影響你自己的瀏覽器。設定方式見 README.md「Supabase 設定步驟」。</span>
       </div>
       <div class="row">
         <span id="selectedPetLabel">尚未選取寵物</span>
