@@ -6,5 +6,5 @@
 // 沒有填的話（維持空字串），網頁版會自動略過 Supabase，
 // 照舊只用內建的 pet_data.js 資料，不會壞掉，只是不會共用更新。
 
-const SUPABASE_URL = "";       // 例如: "https://xxxxxxxxxxxx.supabase.co"
-const SUPABASE_ANON_KEY = "";  // 例如: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9......"
+const SUPABASE_URL = "";       // 例如: "https://mxepeqwutvdhruhzzomt.supabase.co"
+const SUPABASE_ANON_KEY = "";  // 例如: "sb_publishable_Dp-iyFT7aGmPtmw9fncw2A_iCzXcYK2"
