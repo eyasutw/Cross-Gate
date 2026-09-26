@@ -116,10 +116,11 @@
      crit text, counter text, hit text, dodge text,
      regen text, spirit text, matk text, mres text,
      poison text, petrify text, confuse text, forget text,
-     drunk text, curse text, charm text,
+     drunk text, curse text, sleep text, charm text,
      earth text, water text, fire text, wind text,
      skill_reduction text,
      icon text,
+     location text,
      effect text,
      updated_at timestamptz default now()
    );
@@ -137,6 +138,14 @@
 
    create policy "public can delete items" on items
      for delete using (true);
+   ```
+
+   如果你**之前已經跑過**上面這段 SQL、建過 `items` 表了，不用整張表刪掉重建，
+   到 SQL Editor 貼上這段執行一次，補上新加的兩個欄位就好：
+
+   ```sql
+   alter table items add column if not exists sleep text;
+   alter table items add column if not exists location text;
    ```
 
    （這些數值欄位刻意設成 `text` 而不是 `numeric`，是因為道具數值常常是像「-100~100」這樣的

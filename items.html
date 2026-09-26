@@ -383,9 +383,10 @@
       crit: it.crit || 0, counter: it.counter || 0, hit: it.hit || 0, dodge: it.dodge || 0,
       regen: it.regen || 0, spirit: it.spirit || 0, matk: it.matk || 0, mres: it.mres || 0,
       poison: it.poison || 0, petrify: it.petrify || 0, confuse: it.confuse || 0, forget: it.forget || 0,
-      drunk: it.drunk || 0, charm: it.charm || 0, curse: it.curse || 0, earth: it.earth || 0, water: it.water || 0,
+      drunk: it.drunk || 0, charm: it.charm || 0, curse: it.curse || 0, sleep: it.sleep || 0,
+      earth: it.earth || 0, water: it.water || 0,
       fire: it.fire || 0, wind: it.wind || 0, skill_reduction: it.skillReduction || 0,
-      icon: it.icon || null, effect: it.effect,
+      icon: it.icon || null, location: it.location || null, effect: it.effect,
     };
   }
 
@@ -395,8 +396,8 @@
       hp: r.hp, mp: r.mp, atk: r.atk, def: r.def, agi: r.agi, crit: r.crit, counter: r.counter,
       hit: r.hit, dodge: r.dodge, regen: r.regen, spirit: r.spirit, matk: r.matk, mres: r.mres,
       poison: r.poison, petrify: r.petrify, confuse: r.confuse, forget: r.forget, drunk: r.drunk,
-      charm: r.charm, curse: r.curse, earth: r.earth, water: r.water, fire: r.fire, wind: r.wind,
-      skillReduction: r.skill_reduction, icon: r.icon, effect: r.effect,
+      charm: r.charm, curse: r.curse, sleep: r.sleep, earth: r.earth, water: r.water, fire: r.fire, wind: r.wind,
+      skillReduction: r.skill_reduction, icon: r.icon, location: r.location, effect: r.effect,
     };
   }
 
@@ -454,6 +455,7 @@
     { key: "forget",   label: "遠忘",     sortable: true, type: "num" },
     { key: "drunk",    label: "抗酒醉",   sortable: true, type: "num" },
     { key: "curse",    label: "抗詛咒",   sortable: true, type: "num" },
+    { key: "sleep",    label: "抗昏睡",   sortable: true, type: "num" },
     { key: "charm",    label: "魅力",     sortable: true, type: "num" },
     { key: "attribute", label: "屬性",    sortable: true, type: "text" },
     { key: "skillReduction", label: "技能減免", sortable: true, type: "num" },
@@ -463,6 +465,7 @@
     { key: "wind",     label: "風屬性",   sortable: true, type: "num" },
     { key: "level",    label: "等級",     sortable: true, type: "text" },
     { key: "durability", label: "耐久",   sortable: true, type: "text" },
+    { key: "location",  label: "取得地點", sortable: true, type: "text" },
     { key: "effect",   label: "原始說明", sortable: true, type: "text" },
   ];
 
@@ -666,20 +669,44 @@
     { category:"扭蛋娃娃", name:"深海飛龍扭蛋娃娃", level:"4", durability:"150", hp:0, mp:0, atk:0, def:0, agi:60, crit:0, counter:0, hit:10, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+60、命中+10" },
     { category:"扭蛋娃娃", name:"赤天飛龍扭蛋娃娃", level:"4", durability:"150", hp:0, mp:0, atk:80, def:0, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+80、必殺+10" },
     { category:"扭蛋娃娃", name:"兵長馬里諾扭蛋娃娃", level:"4", durability:"100", hp:0, mp:0, atk:0, def:0, agi:50, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:15, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+50、抗石化+15、閃避+15" },
-    { category:"扭蛋娃娃兌換", name:"鳳凰軍團長武魂扭蛋娃娃", level:"5", durability:"150", hp:400, mp:0, atk:250, def:0, agi:0, crit:15, counter:15, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"以「碧空飛龍、深海飛龍、赤天飛龍、金翼飛龍、兵長馬里諾」5隻扭蛋娃娃兌換而成。攻擊+250、必殺+15、反擊+15、生命+400" },
+    { category:"扭蛋娃娃兌換", name:"風暴軍團長武魂扭蛋娃娃", level:"5", durability:"150", hp:400, mp:0, atk:250, def:0, agi:0, crit:15, counter:15, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"蒼月聖學院（27,102）", effect:"以「碧空飛龍、深海飛龍、赤天飛龍、金翼飛龍、兵長馬里諾」5隻扭蛋娃娃兌換而成。攻擊+250、必殺+15、反擊+15、生命+400" },
 
     { category:"扭蛋娃娃", name:"猩紅鬼靈扭蛋娃娃", level:"4", durability:"100", hp:0, mp:500, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔力+500" },
-    { category:"扭蛋娃娃", name:"暗月公主扭蛋娃娃", level:"5", durability:"150", hp:0, mp:300, atk:0, def:0, agi:0, crit:0, counter:12, hit:0, dodge:12, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+20、反擊+12、閃避+12、魔力+300" },
+    { category:"扭蛋娃娃", name:"暗月公主扭蛋娃娃", level:"5", durability:"150", hp:0, mp:300, atk:0, def:0, agi:0, crit:0, counter:12, hit:0, dodge:12, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"海澤蘭冰原（118,54）", effect:"回復+20、反擊+12、閃避+12、魔力+300" },
     { category:"扭蛋娃娃", name:"深海幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+30" },
     { category:"扭蛋娃娃", name:"赤天幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:40, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+40" },
     { category:"扭蛋娃娃", name:"金翼幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"精神+40" },
-    { category:"扭蛋娃娃", name:"皎月公主扭蛋娃娃", level:"5", durability:"150", hp:100, mp:200, atk:0, def:0, agi:0, crit:12, counter:0, hit:12, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+12、命中+12、生命+100、魔力+200" },
-    { category:"扭蛋娃娃", name:"純白豬王扭蛋娃娃", level:"4", durability:"100", hp:500, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500" },
-    { category:"扭蛋娃娃", name:"火柴小王子扭蛋娃娃", level:"5", durability:"150", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:10, petrify:10, confuse:10, forget:0, drunk:10, curse:10, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+40、抗毒+10、抗詛咒+10、抗石化+10、抗酒醉+10、抗混亂+10" },
+    { category:"扭蛋娃娃", name:"皎月公主扭蛋娃娃", level:"5", durability:"150", hp:100, mp:200, atk:0, def:0, agi:0, crit:12, counter:0, hit:12, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"海澤蘭冰原（118,54）", effect:"必殺+12、命中+12、生命+100、魔力+200" },
+    { category:"扭蛋娃娃", name:"純白豬王扭蛋娃娃", level:"4", durability:"100", hp:500, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"蒼月聖學院（36,144）", effect:"生命+500" },
+    { category:"扭蛋娃娃", name:"火柴小王子扭蛋娃娃", level:"5", durability:"150", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:10, petrify:10, confuse:10, forget:0, drunk:10, curse:0, sleep:10, charm:0, earth:0, water:0, fire:0, wind:0, location:"雪山之頂（41,25）", effect:"回復+40、抗毒+10、抗酒醉+10、抗昏睡+10、抗混亂+10、抗石化+10" },
     { category:"扭蛋娃娃", name:"戰爭女神扭蛋娃娃", level:"5", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+15、生命+150" },
-    { category:"扭蛋娃娃", name:"聖誕鼠王扭蛋娃娃", level:"5", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+40、閃避+15、生命+150" },
-    { category:"扭蛋娃娃", name:"神聖天使扭蛋娃娃", level:"1", durability:"200", hp:300, mp:300, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:19, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:20, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+30、抗石化+20、閃避+19、生命+300、魔力+300" },
-    { category:"扭蛋娃娃兌換", name:"鳳凰軍團長魔魂扭蛋娃娃", level:"5", durability:"150", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:30, spirit:0, matk:200, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+30、閃避+15、生命+300、魔攻+200" },
+    { category:"扭蛋娃娃", name:"聖誕鼠王扭蛋娃娃", level:"5", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"莎蓮娜（155,149）", effect:"回復+40、閃避+15、生命+150" },
+    { category:"扭蛋娃娃", name:"神聖天使扭蛋娃娃", level:"1", durability:"200", hp:300, mp:300, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:"15~20", regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:"15~20", confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, skillReduction:10, location:"麗夏村（109,91）", effect:"減少超強補血魔法耗魔的10%、生命+300、魔力+300、敏捷+30、閃避+(15~20)、抗石化+(15~20)" },
+    { category:"扭蛋娃娃兌換", name:"風暴軍團長魔魂扭蛋娃娃", level:"5", durability:"150", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:30, spirit:0, matk:200, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"麗夏村（74,73）", effect:"回復+30、閃避+15、生命+300、魔攻+200" },
+
+    // ↓↓↓ 2026-09-26 新增：天使／星圖／阿爾卡迪亞系列 ↓↓↓
+    { category:"扭蛋娃娃", name:"幻之惡魔扭蛋娃娃", level:"", durability:"", hp:200, mp:200, atk:0, def:0, agi:100, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:15, petrify:15, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, skillReduction:10, location:"布倫尼亞民宅（34,66）", effect:"減少超強石化魔法耗魔的10%、生命+200、魔力+200、敏捷+100、抗石化+15、抗毒+15" },
+    { category:"扭蛋娃娃", name:"愛情天使扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:10, petrify:10, confuse:0, forget:0, drunk:0, curse:0, sleep:10, charm:0, earth:0, water:0, fire:0, wind:0, skillReduction:10, location:"海拉爾村民宅（43,73）", effect:"減少強力補血魔法10%耗魔、生命+200、敏捷+30、抗毒+10、抗昏睡+10、抗石化+10、閃避+15" },
+    { category:"扭蛋娃娃", name:"戰鬥天使扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:50, def:0, agi:0, crit:0, counter:0, hit:15, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, skillReduction:10, location:"赫蘭尼斯堡（123,112）", effect:"減少裂空斬10%耗魔、生命+200、攻擊+50、命中+15" },
+    { category:"扭蛋娃娃", name:"守護天使扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:100, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"艾爾瑪城（141,174）", effect:"生命+200、防禦+100、閃避+15" },
+    { category:"扭蛋娃娃", name:"風暴天使扭蛋娃娃", level:"", durability:"", hp:0, mp:200, atk:50, def:0, agi:0, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"艾爾瑪城（108,154）", effect:"魔力+200、攻擊+50、必殺+15" },
+    { category:"扭蛋娃娃", name:"隕星之刃扭蛋娃娃", level:"", durability:"", hp:180, mp:-50, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"海澤蘭冰原（118,54）", effect:"生命+180、魔力-50" },
+
+    { category:"22週年星圖", name:"22週年水龍蜥", slot:"護身符", level:"", durability:"", hp:400, mp:0, atk:0, def:0, agi:-100, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1水瓶座", effect:"生命+400、必殺+15、敏捷-100" },
+    { category:"22週年星圖", name:"22週年黃蜂", slot:"護身符", level:"", durability:"", hp:0, mp:0, atk:0, def:-100, agi:100, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1飛魚座", effect:"敏捷+100、閃避+15、防禦-100" },
+    { category:"22週年星圖", name:"22週年螳螂", slot:"護身符", level:"", durability:"", hp:0, mp:0, atk:200, def:0, agi:0, crit:0, counter:0, hit:15, dodge:0, regen:0, spirit:0, matk:0, mres:-100, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1天蝎座", effect:"攻擊+200、命中+15、抗魔-100" },
+    { category:"22週年星圖", name:"蛟龍", slot:"護身符", level:"", durability:"", hp:300, mp:0, atk:0, def:0, agi:-10, crit:0, counter:0, hit:10, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1天馬座", effect:"生命+300、命中+10、敏捷-10" },
+    { category:"22週年星圖", name:"埃及眼鏡蛇", slot:"護身符", level:"", durability:"", hp:300, mp:0, atk:0, def:0, agi:-10, crit:0, counter:0, hit:0, dodge:0, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1巨蟹座", effect:"生命+300、回復+20、敏捷-10" },
+    { category:"22週年星圖", name:"八岐大蛇", slot:"護身符", level:"", durability:"", hp:300, mp:0, atk:0, def:0, agi:-10, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖1牡羊座", effect:"生命+300、閃避+10、敏捷-10" },
+
+    { category:"阿爾卡迪亞星圖", name:"女帝阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:300, mp:0, atk:0, def:0, agi:20, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:10, petrify:10, confuse:10, forget:10, drunk:10, curse:0, sleep:10, charm:0, earth:0, water:0, fire:0, wind:0, location:"蒼月聖學院（118,68）", effect:"生命+300、敏捷+20、抗毒+10、抗昏睡+10、抗石化+10、抗酒醉+10、抗混亂+10、抗遺忘+10" },
+    { category:"阿爾卡迪亞星圖", name:"戰斧阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:10, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2飛魚座", effect:"生命+100、抗毒+10" },
+    { category:"阿爾卡迪亞星圖", name:"弓箭阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, sleep:10, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2天蝎座", effect:"生命+100、抗昏睡+10" },
+    { category:"阿爾卡迪亞星圖", name:"格鬥阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:10, confuse:0, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2金牛座", effect:"生命+100、抗石化+10" },
+    { category:"阿爾卡迪亞星圖", name:"劍士阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:10, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2天馬座", effect:"生命+100、抗酒醉+10" },
+    { category:"阿爾卡迪亞星圖", name:"法師阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:10, forget:0, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2巨蟹座", effect:"生命+100、抗混亂+10" },
+    { category:"阿爾卡迪亞星圖", name:"咒術阿爾卡迪亞", slot:"護身符", level:"", durability:"", hp:100, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:10, drunk:0, curse:0, sleep:0, charm:0, earth:0, water:0, fire:0, wind:0, location:"星圖2牡羊座（座標未提供，資料可能被截斷，請確認）", effect:"生命+100、抗遺忘+10" },
+    // ↑↑↑ 天使／星圖／阿爾卡迪亞系列結束 ↑↑↑
     // ↑↑↑ 飛龍／幼龍／頭目系列扭蛋娃娃結束 ↑↑↑
   ];
 
@@ -970,7 +997,7 @@
     let rows = ITEMS.filter(item => {
       const matchCat = activeCategory === "全部" || item.category === activeCategory;
       const matchSlot = activeSlot === "全部" || item.slot === activeSlot;
-      const haystack = (item.name + " " + item.category + " " + item.effect).toLowerCase();
+      const haystack = (item.name + " " + item.category + " " + item.effect + " " + (item.location||"")).toLowerCase();
       const matchSearch = haystack.includes(searchTerm.toLowerCase());
       const matchAdv = Object.keys(advFilters).every(key => statMax(item[key]) >= advFilters[key]);
       return matchCat && matchSlot && matchSearch && matchAdv;
