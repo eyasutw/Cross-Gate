@@ -97,6 +97,68 @@
 
 沒有設定 Supabase 也完全不影響原本的功能，只是資料不會在不同人、不同瀏覽器之間同步。
 
+### 飾品道具資料庫（items.html）也要用共用資料庫的話
+
+`items.html` 跟 `pets.html` 是共用同一個 Supabase 專案、同一份 `supabase-config.js`，
+所以如果你已經照上面的步驟設定好寵物資料的共用資料庫，**不用重新申請專案**，
+只要多建一張表就好：
+
+1. 一樣到 Supabase 後台的 **SQL Editor**，貼上下面的 SQL 執行一次：
+
+   ```sql
+   create table items (
+     id bigint generated always as identity primary key,
+     category text,
+     name text,
+     level text,
+     durability text,
+     hp text, mp text, atk text, def text, agi text,
+     crit text, counter text, hit text, dodge text,
+     regen text, spirit text, matk text, mres text,
+     poison text, petrify text, confuse text, forget text,
+     drunk text, curse text, charm text,
+     earth text, water text, fire text, wind text,
+     skill_reduction text,
+     icon text,
+     effect text,
+     updated_at timestamptz default now()
+   );
+
+   alter table items enable row level security;
+
+   create policy "public can read items" on items
+     for select using (true);
+
+   create policy "public can insert items" on items
+     for insert with check (true);
+
+   create policy "public can update items" on items
+     for update using (true);
+
+   create policy "public can delete items" on items
+     for delete using (true);
+   ```
+
+   （這些數值欄位刻意設成 `text` 而不是 `numeric`，是因為道具數值常常是像「-100~100」這樣的
+   浮動區間，不是單一數字，`numeric` 欄位存不了這種文字。畫面上排序、篩選的時候，
+   程式會自動取區間的上限來比較，不用擔心存成文字會影響排序或「更多搜尋」的功能。）
+
+   如果你**已經**照舊版說明建過 `items` 表（欄位是 `numeric`），要改用區間功能的話，
+   先把整張表刪掉重建最簡單：
+   ```sql
+   drop table items;
+   ```
+   然後再執行上面新的建表 SQL。
+
+   （道具沒有像寵物名稱那樣可以當唯一值的欄位——例如「大地鼠帽」在資料裡就出現兩次、數值還不一樣——
+   所以這張表**沒有**加 `unique` 限制，「上傳到共用資料庫」的動作是整批覆蓋：
+   會先把雲端這張表清空，再把畫面上目前的資料整批寫進去，而不是用寵物頁那種比對名稱的更新方式。）
+
+2. 不用改 `supabase-config.js`，兩個頁面本來就讀同一份設定。
+
+設定完成後，`items.html` 畫面上「資料同步」那排的「☁ 上傳到共用資料庫」「⟲ 重新讀取共用資料庫」
+按鈕就會變成可以點的狀態，用法跟寵物頁一樣。
+
 ## 之後如果想再加更多功能頁面
 
 1. 把新的頁面（例如 `xxx.html`）也上傳到同一個資料夾

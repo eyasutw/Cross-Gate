@@ -282,6 +282,8 @@
     padding:8px 14px; border-radius:999px; cursor:pointer;
   }
   .sync-btn:hover{ border-color: var(--gold-soft); }
+  .sync-btn:disabled{ opacity: 0.45; cursor: not-allowed; }
+  .sync-btn:disabled:hover{ border-color: var(--line); }
   .sync-file{ font-size:12px; color: var(--text-dim); max-width:180px; }
   .controls-hint{ font-size:12px; color: var(--text-dim); }
 
@@ -340,6 +342,8 @@
     <button id="btnExportItems" class="sync-btn">⬇ 匯出目前資料 (JSON)</button>
     <input type="file" id="itemImportFile" accept="application/json,.json" class="sync-file">
     <button id="btnImportItems" class="sync-btn">⬆ 匯入並套用</button>
+    <button id="btnPushSupabaseItems" class="sync-btn">☁ 上傳到共用資料庫</button>
+    <button id="btnPullSupabaseItems" class="sync-btn">⟲ 重新讀取共用資料庫</button>
     <span class="controls-hint" id="itemSyncHint"></span>
   </div>
 
@@ -362,6 +366,70 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script>
+  // ── Supabase：大家共用的道具資料庫（跟寵物頁共用同一個 Supabase 專案，
+  // 但存在不同的資料表 "items" 裡；設定方式見 README.md「Supabase 設定步驟」）──
+  let supabaseClient = null;
+  if (typeof SUPABASE_URL !== "undefined" && SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== "undefined") {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  function itemToSupabaseRecord(it) {
+    return {
+      category: it.category, name: it.name, level: it.level, durability: it.durability,
+      hp: it.hp || 0, mp: it.mp || 0, atk: it.atk || 0, def: it.def || 0, agi: it.agi || 0,
+      crit: it.crit || 0, counter: it.counter || 0, hit: it.hit || 0, dodge: it.dodge || 0,
+      regen: it.regen || 0, spirit: it.spirit || 0, matk: it.matk || 0, mres: it.mres || 0,
+      poison: it.poison || 0, petrify: it.petrify || 0, confuse: it.confuse || 0, forget: it.forget || 0,
+      drunk: it.drunk || 0, charm: it.charm || 0, curse: it.curse || 0, earth: it.earth || 0, water: it.water || 0,
+      fire: it.fire || 0, wind: it.wind || 0, skill_reduction: it.skillReduction || 0,
+      icon: it.icon || null, effect: it.effect,
+    };
+  }
+
+  function supabaseRecordToItem(r) {
+    return {
+      category: r.category, name: r.name, level: r.level, durability: r.durability,
+      hp: r.hp, mp: r.mp, atk: r.atk, def: r.def, agi: r.agi, crit: r.crit, counter: r.counter,
+      hit: r.hit, dodge: r.dodge, regen: r.regen, spirit: r.spirit, matk: r.matk, mres: r.mres,
+      poison: r.poison, petrify: r.petrify, confuse: r.confuse, forget: r.forget, drunk: r.drunk,
+      charm: r.charm, curse: r.curse, earth: r.earth, water: r.water, fire: r.fire, wind: r.wind,
+      skillReduction: r.skill_reduction, icon: r.icon, effect: r.effect,
+    };
+  }
+
+  async function loadItemsFromSupabase() {
+    if (!supabaseClient) return null;
+    const all = [];
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabaseClient.from("items").select("*").range(from, from + pageSize - 1);
+      if (error) throw error;
+      if (!data || !data.length) break;
+      all.push(...data.map(supabaseRecordToItem));
+      if (data.length < pageSize) break;
+    }
+    return all.length ? all : null;
+  }
+
+  async function pushItemsToSupabase(itemList) {
+    if (!supabaseClient) return { skipped: true };
+    // 道具名稱不是唯一值（例如「大地鼠帽」在資料裡出現兩次、數值不同），沒辦法用 upsert 比對，
+    // 所以「上傳」採用「整批覆蓋」：先清空雲端資料表，再把目前畫面上的資料整批寫入。
+    const { error: delError } = await supabaseClient.from("items").delete().gte("id", 0);
+    if (delError) throw delError;
+    const rows = itemList.map(itemToSupabaseRecord);
+    const chunkSize = 500;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+      const { error } = await supabaseClient.from("items").insert(chunk);
+      if (error) throw error;
+    }
+    return { skipped: false, count: rows.length };
+  }
+</script>
 <script>
   // ---- 欄位定義（依你提供的「初心服首飾屬性表」截圖建立）----
   const COLUMNS = [
@@ -385,6 +453,7 @@
     { key: "confuse",  label: "混亂",     sortable: true, type: "num" },
     { key: "forget",   label: "遠忘",     sortable: true, type: "num" },
     { key: "drunk",    label: "抗酒醉",   sortable: true, type: "num" },
+    { key: "curse",    label: "抗詛咒",   sortable: true, type: "num" },
     { key: "charm",    label: "魅力",     sortable: true, type: "num" },
     { key: "attribute", label: "屬性",    sortable: true, type: "text" },
     { key: "skillReduction", label: "技能減免", sortable: true, type: "num" },
@@ -577,6 +646,41 @@
     { category:"特惠禮盒頭飾", name:"天使派隊帽", level:"1", durability:"200", hp:0, mp:0, atk:30, def:30, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 攻擊+30、防禦+30、敏捷+30" },
     { category:"特惠禮盒頭飾", name:"惡魔派對帽", level:"1", durability:"200", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:30, matk:30, mres:30, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 精神+30、魔攻+30、抗魔+30" },
     { category:"特惠禮盒頭飾", name:"彩帶派對帽", level:"1", durability:"200", hp:150, mp:50, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[狂歡派對] 回復+30、生命+150、魔力+50" },
+
+    // ↓↓↓ 2026-09-26 新增：魔力盲盒（扭蛋）系列 ↓↓↓
+    { category:"魔力盲盒", name:"龍蝦霸王扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:0, agi:0, crit:20, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[魔力盲盒 3%機率] 生命+200、必殺+20" },
+    { category:"魔力盲盒", name:"烈焰龍蝦扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:50, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[魔力盲盒 3%機率] 生命+200、防禦+50" },
+    { category:"魔力盲盒", name:"海龍蝦扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:0, agi:50, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[魔力盲盒 3%機率] 生命+200、敏捷+50" },
+    { category:"魔力盲盒", name:"烈風龍蝦扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:30, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[魔力盲盒 3%機率] 生命+200、回復+30" },
+    { category:"魔力盲盒", name:"沼澤龍蝦扭蛋娃娃", level:"", durability:"", hp:200, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:50, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"[魔力盲盒 3%機率] 生命+200、抗魔+50" },
+    { category:"扭蛋娃娃兌換", name:"黑潮龍蝦跟隨護符", level:"1", durability:"300", hp:"300~400", mp:0, atk:50, def:0, agi:50, crit:"10~20", counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"極稀有的扭蛋娃娃，除了佩戴後能附加屬性外，給予世界各地的扭蛋娃娃收集者所需的扭蛋娃娃還能獲得特殊的報酬！生命+(300~400)、攻擊+50、敏捷+50、必殺+(10~20)。兌換NPC地點：艾爾瑪城 (211,241)" },
+    // ↑↑↑ 魔力盲盒系列結束 ↑↑↑
+
+    { category:"特殊飾品頭飾", name:"冥炎太極水母頭飾", level:"", durability:"", hp:"300~400", mp:"300~400", atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:"20~50", spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:2, fire:0, wind:0, effect:"生命+(300~400)、魔力+(300~400)、回復+(20~50)、水屬性+2" },
+
+    { category:"護身符", name:"星宿舞姬跟隨護符", level:"", durability:"", hp:"300~600", mp:0, atk:"100~250", def:"-50~-5", agi:0, crit:"10~25", counter:0, hit:0, dodge:0, regen:"10~30", spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, charm:0, earth:0, water:0, fire:0, wind:0, skillReduction:0, effect:"（2026-09-26 優化後）生命+(300~600)、攻擊+(100~250)、必殺+(10~25)、回復+(10~30)、防禦-(5~50)、氣功彈耗魔減少10%" },
+
+    // ↓↓↓ 2026-09-26 新增：飛龍／幼龍／頭目系列扭蛋娃娃（種類皆為護身符）↓↓↓
+    { category:"扭蛋娃娃", name:"金翼飛龍扭蛋娃娃", level:"4", durability:"150", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:10, regen:0, spirit:80, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"精神+80、閃避+10" },
+    { category:"扭蛋娃娃", name:"碧空飛龍扭蛋娃娃", level:"4", durability:"150", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:10, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"反擊+10、生命+300" },
+    { category:"扭蛋娃娃", name:"深海飛龍扭蛋娃娃", level:"4", durability:"150", hp:0, mp:0, atk:0, def:0, agi:60, crit:0, counter:0, hit:10, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+60、命中+10" },
+    { category:"扭蛋娃娃", name:"赤天飛龍扭蛋娃娃", level:"4", durability:"150", hp:0, mp:0, atk:80, def:0, agi:0, crit:10, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+80、必殺+10" },
+    { category:"扭蛋娃娃", name:"兵長馬里諾扭蛋娃娃", level:"4", durability:"100", hp:0, mp:0, atk:0, def:0, agi:50, crit:0, counter:0, hit:0, dodge:15, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:15, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+50、抗石化+15、閃避+15" },
+    { category:"扭蛋娃娃兌換", name:"鳳凰軍團長武魂扭蛋娃娃", level:"5", durability:"150", hp:400, mp:0, atk:250, def:0, agi:0, crit:15, counter:15, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"以「碧空飛龍、深海飛龍、赤天飛龍、金翼飛龍、兵長馬里諾」5隻扭蛋娃娃兌換而成。攻擊+250、必殺+15、反擊+15、生命+400" },
+
+    { category:"扭蛋娃娃", name:"猩紅鬼靈扭蛋娃娃", level:"4", durability:"100", hp:0, mp:500, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"魔力+500" },
+    { category:"扭蛋娃娃", name:"暗月公主扭蛋娃娃", level:"5", durability:"150", hp:0, mp:300, atk:0, def:0, agi:0, crit:0, counter:12, hit:0, dodge:12, regen:20, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+20、反擊+12、閃避+12、魔力+300" },
+    { category:"扭蛋娃娃", name:"深海幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+30" },
+    { category:"扭蛋娃娃", name:"赤天幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:40, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"攻擊+40" },
+    { category:"扭蛋娃娃", name:"金翼幼龍扭蛋娃娃", level:"3", durability:"100", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:40, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"精神+40" },
+    { category:"扭蛋娃娃", name:"皎月公主扭蛋娃娃", level:"5", durability:"150", hp:100, mp:200, atk:0, def:0, agi:0, crit:12, counter:0, hit:12, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+12、命中+12、生命+100、魔力+200" },
+    { category:"扭蛋娃娃", name:"純白豬王扭蛋娃娃", level:"4", durability:"100", hp:500, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"生命+500" },
+    { category:"扭蛋娃娃", name:"火柴小王子扭蛋娃娃", level:"5", durability:"150", hp:0, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:0, regen:40, spirit:0, matk:0, mres:0, poison:10, petrify:10, confuse:10, forget:0, drunk:10, curse:10, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+40、抗毒+10、抗詛咒+10、抗石化+10、抗酒醉+10、抗混亂+10" },
+    { category:"扭蛋娃娃", name:"戰爭女神扭蛋娃娃", level:"5", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:15, counter:0, hit:0, dodge:0, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"必殺+15、生命+150" },
+    { category:"扭蛋娃娃", name:"聖誕鼠王扭蛋娃娃", level:"5", durability:"150", hp:150, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:40, spirit:0, matk:0, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+40、閃避+15、生命+150" },
+    { category:"扭蛋娃娃", name:"神聖天使扭蛋娃娃", level:"1", durability:"200", hp:300, mp:300, atk:0, def:0, agi:30, crit:0, counter:0, hit:0, dodge:19, regen:0, spirit:0, matk:0, mres:0, poison:0, petrify:20, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"敏捷+30、抗石化+20、閃避+19、生命+300、魔力+300" },
+    { category:"扭蛋娃娃兌換", name:"鳳凰軍團長魔魂扭蛋娃娃", level:"5", durability:"150", hp:300, mp:0, atk:0, def:0, agi:0, crit:0, counter:0, hit:0, dodge:15, regen:30, spirit:0, matk:200, mres:0, poison:0, petrify:0, confuse:0, forget:0, drunk:0, curse:0, charm:0, earth:0, water:0, fire:0, wind:0, effect:"回復+30、閃避+15、生命+300、魔攻+200" },
+    // ↑↑↑ 飛龍／幼龍／頭目系列扭蛋娃娃結束 ↑↑↑
   ];
 
   // ---- 小工具 ----
@@ -586,8 +690,28 @@
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
+  // ---- 數值區間支援 ----
+  // 有些道具的數值是浮動區間（例如攻擊 -100~100），欄位裡可以直接填數字（固定值），
+  // 也可以填 "最小值~最大值" 的文字（例如 "-100~100"、"100~170"）。
+  // 這裡統一用 "~" 當區間分隔符號，不用 "-"，是因為數值本身可能是負的，用 "-" 會分不清楚。
+  function parseStatRange(val){
+    if (val === undefined || val === null || val === "") return { min: 0, max: 0 };
+    if (typeof val === "number") return { min: val, max: val };
+    const str = String(val).trim();
+    const m = str.match(/^(-?\d+(?:\.\d+)?)\s*~\s*(-?\d+(?:\.\d+)?)$/);
+    if (m) {
+      const a = parseFloat(m[1]), b = parseFloat(m[2]);
+      return { min: Math.min(a, b), max: Math.max(a, b) };
+    }
+    const n = parseFloat(str);
+    return isNaN(n) ? { min: 0, max: 0 } : { min: n, max: n };
+  }
+  function statMax(val){ return parseStatRange(val).max; }
+  function statMin(val){ return parseStatRange(val).min; }
+
   // 依名稱粗略判斷「部位」：項鍊/戒指/手鍊/護符/徽章/吊墜 等歸類為護身符，其餘（帽子、頭飾、頭套、耳朵…）視為頭飾。
   function classifySlot(name){
+    if (/扭蛋娃娃/.test(name)) return "護身符"; // 遊戲內顯示「種類 護身符」，扭蛋娃娃系列一律走護身符欄位
     if (/戒指|戒|項鍊|手鍊|手環|護符|徽章|吊墜|墜飾|符咒|護身符/.test(name)) return "護身符";
     return "頭飾";
   }
@@ -656,10 +780,6 @@
   const imgModalTitle = document.getElementById("imgModalTitle");
   const imgModalBody = document.getElementById("imgModalBody");
   const imgModalClose = document.getElementById("imgModalClose");
-
-  itemSyncHint.textContent = usedCache
-    ? `已讀取上次匯入的本機資料，共 ${ITEMS.length} 筆（只存在你目前這個瀏覽器裡）。`
-    : "資料異動只會存在你目前這個瀏覽器（本機快取）。要分享給別人的話，把「匯出目前資料」的 JSON 檔傳給對方，請對方用「匯入並套用」載入。";
 
   function renderHeader(){
     headerRow.innerHTML = "";
@@ -835,7 +955,10 @@
     }
     const val = item[col.key];
     if (col.type === "num") {
-      return val ? val : `<span style="color:#565f92">—</span>`;
+      if (val === undefined || val === null || val === "" || val === 0 || val === "0") {
+        return `<span style="color:#565f92">—</span>`;
+      }
+      return escapeHtml(String(val));
     }
     if (col.type === "text") {
       return val ? escapeHtml(val) : `<span style="color:#565f92">—</span>`;
@@ -849,11 +972,16 @@
       const matchSlot = activeSlot === "全部" || item.slot === activeSlot;
       const haystack = (item.name + " " + item.category + " " + item.effect).toLowerCase();
       const matchSearch = haystack.includes(searchTerm.toLowerCase());
-      const matchAdv = Object.keys(advFilters).every(key => (Number(item[key]) || 0) >= advFilters[key]);
+      const matchAdv = Object.keys(advFilters).every(key => statMax(item[key]) >= advFilters[key]);
       return matchCat && matchSlot && matchSearch && matchAdv;
     });
 
     rows.sort((a, b) => {
+      const col = COLUMNS.find(c => c.key === sortKey);
+      if (col && col.type === "num") {
+        const av = statMax(a[sortKey]), bv = statMax(b[sortKey]);
+        return sortDir === "asc" ? av - bv : bv - av;
+      }
       let av = a[sortKey], bv = b[sortKey];
       if (typeof av === "string" || typeof bv === "string") {
         av = av == null ? "" : String(av);
@@ -936,6 +1064,76 @@
     reader.onerror = () => { itemSyncHint.textContent = "讀取檔案失敗，請重新選擇檔案。"; };
     reader.readAsText(file, "utf-8");
   });
+
+  const btnPushSupabaseItems = document.getElementById("btnPushSupabaseItems");
+  const btnPullSupabaseItems = document.getElementById("btnPullSupabaseItems");
+
+  function updateItemSyncHint(){
+    if (supabaseClient) {
+      itemSyncHint.textContent = "已設定共用資料庫（Supabase）：按「上傳到共用資料庫」會把目前畫面上的資料整批覆蓋雲端資料，其他人打開網站也會看到；按「重新讀取共用資料庫」可以拉回雲端目前的內容。";
+      btnPushSupabaseItems.disabled = false;
+      btnPullSupabaseItems.disabled = false;
+    } else {
+      itemSyncHint.textContent = usedCache
+        ? `已讀取上次匯入的本機資料，共 ${ITEMS.length} 筆（只存在你目前這個瀏覽器裡）。`
+        : "資料異動只會存在你目前這個瀏覽器（本機快取）。要分享給別人的話，把「匯出目前資料」的 JSON 檔傳給對方，請對方用「匯入並套用」載入；或依 README.md「Supabase 設定步驟」設定共用資料庫。";
+      btnPushSupabaseItems.disabled = true;
+      btnPullSupabaseItems.disabled = true;
+    }
+  }
+  updateItemSyncHint();
+
+  btnPushSupabaseItems.addEventListener("click", async () => {
+    if (!supabaseClient) {
+      itemSyncHint.textContent = "尚未設定共用資料庫（Supabase），請先依照 README.md「Supabase 設定步驟」設定 supabase-config.js。";
+      return;
+    }
+    if (!confirm(`即將把目前畫面上的 ${ITEMS.length} 筆道具資料上傳到共用資料庫，覆蓋雲端現有的資料，其他人重新打開網站也會看到這份資料。確定要上傳嗎？`)) return;
+    itemSyncHint.textContent = "上傳中…";
+    try {
+      const r = await pushItemsToSupabase(ITEMS);
+      itemSyncHint.textContent = `已成功上傳 ${r.count != null ? r.count : ITEMS.length} 筆道具資料到共用資料庫。`;
+    } catch (err) {
+      itemSyncHint.textContent = "上傳到共用資料庫失敗：" + err.message;
+    }
+  });
+
+  btnPullSupabaseItems.addEventListener("click", async () => {
+    if (!supabaseClient) {
+      itemSyncHint.textContent = "尚未設定共用資料庫（Supabase），請先依照 README.md「Supabase 設定步驟」設定 supabase-config.js。";
+      return;
+    }
+    itemSyncHint.textContent = "正在讀取共用資料庫…";
+    try {
+      const cloudItems = await loadItemsFromSupabase();
+      if (cloudItems) {
+        ITEMS = enrichItems(cloudItems);
+        saveItemsToCache(ITEMS);
+        activeCategory = "全部"; activeSlot = "全部"; searchTerm = ""; advFilters = {};
+        searchInput.value = "";
+        advPanel.dataset.built = ""; advPanel.style.display = "none";
+        btnAdvancedSearch.classList.remove("active");
+        renderAll();
+        itemSyncHint.textContent = `已從共用資料庫讀取最新的 ${ITEMS.length} 筆道具資料。`;
+      } else {
+        itemSyncHint.textContent = "共用資料庫目前是空的，還沒有人上傳過資料。";
+      }
+    } catch (err) {
+      itemSyncHint.textContent = "讀取共用資料庫失敗：" + err.message;
+    }
+  });
+
+  // 有設定共用資料庫的話，一打開網頁就先嘗試拉一次雲端最新資料
+  if (supabaseClient) {
+    loadItemsFromSupabase().then(cloudItems => {
+      if (cloudItems) {
+        ITEMS = enrichItems(cloudItems);
+        saveItemsToCache(ITEMS);
+        renderAll();
+        itemSyncHint.textContent = `已讀取共用資料庫，共 ${ITEMS.length} 筆道具資料。`;
+      }
+    }).catch(err => console.error("Supabase 道具讀取失敗：", err));
+  }
 
   renderAll();
 </script>
