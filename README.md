@@ -121,6 +121,7 @@
      skill_reduction text,
      icon text,
      location text,
+     race_change text,
      effect text,
      updated_at timestamptz default now()
    );
@@ -146,6 +147,7 @@
    ```sql
    alter table items add column if not exists sleep text;
    alter table items add column if not exists location text;
+   alter table items add column if not exists race_change text;
    ```
 
    （這些數值欄位刻意設成 `text` 而不是 `numeric`，是因為道具數值常常是像「-100~100」這樣的
